@@ -23,6 +23,15 @@ Instantiate through [schema mapping](README.md) as `artifact_type: shared-plan`;
 - Stack profile / capability coverage links:
 - First implementation slice:
 
+## Product and UI design brief
+
+- Product type / target users / top tasks:
+- Information hierarchy / content and data density:
+- Brand, locale, copy and product constraints:
+- Supported devices, input modes and narrow/wide breakpoints:
+- Accessibility target / performance and motion budgets:
+- Optional design-intelligence candidates accepted/rejected with rationale and source record:
+
 ## Contract inventory
 
 | `SHARED-*` item | Category | Stable semantics | First two real consumers | Allowed dependencies | Must not own | Removal/merge trigger |
@@ -32,6 +41,14 @@ Instantiate through [schema mapping](README.md) as `artifact_type: shared-plan`;
 
 | Item | Accessibility/focus/responsive behavior | Feature-owned inputs/policy | Component `EVID-*` / status | Runtime/bundle constraint |
 | --- | --- | --- | --- | --- |
+
+## Token and component-state contract
+
+| Primitive token family | Semantic purpose mappings | Component/state tokens | Framework-native theme/API evidence | Light/dark/contrast/responsive evidence |
+| --- | --- | --- | --- | --- |
+
+| Component/surface | Default/hover/focus/active | Disabled/loading/invalid/denied | Empty/error/stale/success | Narrow/wide + keyboard/touch behavior | `EVID-*` |
+| --- | --- | --- | --- | --- | --- |
 
 ## Preset UI capability matrix
 
@@ -57,6 +74,13 @@ Use `provided`, `verified`, `conditional`, or `unsupported` when this plan contr
 
 | Flow | Feature callback/query key owner | Loading/empty/error/stale/success | Field/conflict/denied/dependency mapping | Focus/close/navigation | Invalidation/refetch owner |
 | --- | --- | --- | --- | --- | --- |
+
+## Design and outcome evidence
+
+| Surface/flow | Exact UI API/source record | Objective accessibility/component checks | Viewport/state renders | Pattern-conformance result | Requested-outcome result |
+| --- | --- | --- | --- | --- | --- |
+
+Keep both final verdicts independent. A component gallery may prove tokens/states but not a feature payload, action result, authorization decision or user journey.
 
 ## Kernel, hooks, formatting, and testing
 

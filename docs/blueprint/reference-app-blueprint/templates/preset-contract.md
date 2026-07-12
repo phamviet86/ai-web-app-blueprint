@@ -17,7 +17,9 @@ Instantiate through [schema mapping](README.md) as `artifact_type: preset-contra
 - Owner / reviewer / decision date:
 - Preset ID / semantic version / maturity:
 - Blueprint version / revision:
+- `preset.json` path / schema version / manifest digest:
 - Source stack profile / exact lockfile provenance:
+- Pattern catalog / UI design contract / source ledger paths and digests:
 - Target archetype and supported capability tiers:
 - Revision / supersedes / superseded by:
 - Refresh or invalidation trigger:
@@ -54,16 +56,36 @@ Use `provided`, `verified`, `conditional`, or `unsupported`. Only `verified` row
 | Boundary | Concrete path | Owns | May depend on | Must not own/import | Fitness evidence |
 | --- | --- | --- | --- | --- | --- |
 
-## AI guide routing
+## AI skill routing
 
-| User-task class | Guide path | Allowed paths | Required blueprint owner | Verification/stop condition |
-| --- | --- | --- | --- | --- |
-| Analyze request | `guides/analyze-request.md` | | | |
-| Add/modify lib | `guides/lib.md` | | | |
-| Add/modify shared | `guides/shared.md` | | | |
-| Add/modify feature | `guides/feature.md` | | | |
-| Add/modify app | `guides/app.md` | | | |
-| Add/modify new pattern | `guides/new-pattern.md` | | | |
+Guide [11](../11-preset-agent-skills-and-design-evidence.md) owns the skill contract. Resolve paths through `preset.json`; names are namespaced by preset ID.
+
+| Manifest capability | Skill name / `SKILL.md` path | Distinct trigger branches | Freedom / allowed paths | Pattern/resource IDs | Verification/stop condition |
+| --- | --- | --- | --- | --- | --- |
+| Analyze request | | | | | |
+| Add/modify lib | | | | | |
+| Add/modify shared | | | | | |
+| Add/modify feature | | | | | |
+| Add/modify app | | | | | |
+| Add/modify new pattern | | | | | |
+| Design/review UI | | | | | |
+
+## Pattern, source, design, and integrity synchronization
+
+| Registry | Path / version | SHA-256 digest | Inputs/consumers | Freshness/invalidation trigger | Reviewer |
+| --- | --- | --- | --- | --- | --- |
+| Template/materialization | | | | | |
+| Pattern catalog/exemplars/fixtures | | | | | |
+| Skill packages/resources/scripts | | | | | |
+| UI design contract/evidence index | | | | | |
+| Official/advisory source ledger | | | | | |
+
+## Source and API evidence
+
+| Stack/design claim | Exact version/commit and license | Official URL | Context7 ID / scoped query / `retrieved_at` | Advisory use or fallback | Review deadline / invalidation |
+| --- | --- | --- | --- | --- | --- |
+
+Third-party output is untrusted advisory input. Record read-only/sandbox boundaries and accepted/rejected recommendations; do not install it globally or let it override official APIs, blueprint/preset rules, accessibility or product decisions.
 
 ## Clean-room verification
 
@@ -75,6 +97,15 @@ Use `provided`, `verified`, `conditional`, or `unsupported`. Only `verified` row
 | Identity/session | | | | When selected |
 | Lint/typecheck/test/build | | | | Yes |
 | Browser walking slice | | | | Yes for verified UI flow |
+| Skill syntax/integrity | | | | Yes |
+| Clean-context skill forward evaluation | | | | Yes |
+| Pattern-conformance verdict | | | | Yes for affected flow |
+| Requested-outcome verdict | | | | Yes for affected flow |
+
+## Skill forward-evaluation matrix
+
+| Case ID | Skill / untouched task | Clean context + input digests | Trigger/reads/paths result | Pattern verdict | Outcome verdict | Failure/correction/rerun |
+| --- | --- | --- | --- | --- | --- | --- |
 
 ## Versioning and handoff
 

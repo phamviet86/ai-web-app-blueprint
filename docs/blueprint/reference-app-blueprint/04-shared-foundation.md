@@ -92,6 +92,22 @@ Every provided data surface declares the canonical request parts it emits, resul
 
 Implement each preset natively for its UI system. Do not create a lowest-common-denominator wrapper merely to make shadcn, Ant Design or another system look identical.
 
+## Design contract and evidence before shared UI code
+
+Before a preset labels a UI capability `provided`, record a design brief with product type, users/top tasks, information hierarchy, content/data density, brand and locale constraints, supported input/device modes, accessibility target, responsive breakpoints and performance budget. An optional pinned design-intelligence source may suggest candidates; the selected result still needs product rationale and framework/API proof under guide [11](11-preset-agent-skills-and-design-evidence.md).
+
+Use three token roles and map each through the selected framework's native theme contract:
+
+| Token role | Owns | Evidence |
+| --- | --- | --- |
+| Primitive | Raw color, type, spacing, radius, elevation, opacity and motion scales | Value inventory, contrast/motion checks and theme inputs |
+| Semantic | Surface, text, border, focus, action, status, density and responsive meaning | Light/dark/high-contrast mappings and usage rules |
+| Component/state | Framework-native component slots, sizes, variants and state overrides | Rendered representative states and API compatibility |
+
+Every interactive component maps default, hover, focus-visible, active, disabled, loading and invalid states where applicable. Every remote surface additionally maps empty, error, stale/degraded, denied and success. Forms preserve normalized values and field errors on failure, announce a safe action result, restore/focus the correct target, close or navigate only on success and let the feature own invalidation. Tables, lists and calendars show how their request controls, result metadata and row/event actions behave at narrow and wide widths.
+
+Acceptance evidence includes objective accessibility/component checks, representative viewport/state captures and at least one real feature walking slice. A component gallery can document tokens and variants but cannot prove payload, action-result, auth or remote-state integration.
+
 ## Standard input and form normalization
 
 Each preset records one value contract reused deliberately across forms, toolbar filters and inline controls:
@@ -157,6 +173,8 @@ App-wide foundations such as theme tokens, application shell and error boundary 
 - Every exported item has at least one real consumer; promoted items have the required semantic justification.
 - Shared UI works with resolved callbacks/data and no hidden module fetch.
 - Keyboard, focus, labels, errors, responsive behavior and reduced motion are checked where applicable.
+- Primitive/semantic/component tokens, design-brief decisions and representative states are linked to exact framework APIs and evidence.
+- UI standards evidence and the real user-outcome result are recorded separately; neither substitutes for the other.
 - Business states/permissions/messages remain in feature presentation.
 - Unused generated design-system components are not treated as shared product APIs.
 

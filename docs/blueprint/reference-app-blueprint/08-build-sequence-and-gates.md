@@ -64,22 +64,39 @@ Guide [10](10-preset-authoring-and-instantiation.md) declares the operating mode
 2. **Contract:** complete `PRESET-*` plus data/shared/platform/feature/route mappings for every provided flow.
 3. **Foundation:** author framework-root template files, `template/src` roles and only the shared/data/auth/app mechanics selected by the contract.
 4. **Walking slices:** implement the smallest removable feature path proving each capability labeled `verified`.
-5. **Agent guides:** complete `analyze-request.md`, `lib.md`, `shared.md`, `feature.md`, `app.md` and `new-pattern.md`; verify that paths/commands match code.
-6. **Clean room:** materialize into an empty temporary repository, install the exact lock set and run selected database/auth/lint/typecheck/test/build/browser gates.
-7. **Publish:** capture evidence/source digests, version manifest/template/guides together and supersede the prior contract explicitly.
+5. **Agent skills:** complete the seven manifest-routed skill packages from guide [11](11-preset-agent-skills-and-design-evidence.md); validate triggers, paths, resources, pattern references, commands and integrity against code.
+6. **Clean room:** materialize into an empty temporary repository, install the exact lock set and run selected database/auth/lint/typecheck/test/build/browser gates plus clean-context skill forward evaluations.
+7. **Publish:** capture evidence/source digests, version manifest/template/skills/patterns together and supersede the prior contract explicitly.
 
 Authoring writes only the preset package; it does not create the distribution repository's root `src/`.
 
 ### `INSTANTIATE_PRESET` phases
 
-1. Check the app system profile against the accepted preset contract and reject unsupported blocking needs.
+1. Check the app system profile against the verified preset revision and reject unsupported blocking needs.
 2. Inventory target paths and stop on an undeclared conflict.
 3. Run the versioned scaffold/materialization map, preserving framework-default root locations and the preset's application `src` layout.
 4. Install exact dependencies and write the application preset lock before feature customization.
 5. Run clean-start, migration/auth and declared verification commands in the target repository.
-6. Create app-specific governance artifacts, then route subsequent user work through the locked preset guides.
+6. Create app-specific governance artifacts, then route subsequent user work through the locked preset skills.
 
 Instantiation is complete only when template provenance, installed paths, dependency lock, preset lock and verification results agree. A later upstream blueprint/preset change becomes an explicit upgrade slice; it never silently rewrites the application.
+
+### Preset skill forward-evaluation gate
+
+Before preset publication, run the real manifest-resolved skills in fresh, minimally primed agent contexts. Provide the skill package, raw task and ordinary repository authority—not an expected patch or the author's diagnosis. Cover direct/misdirected triggers, an established pattern, a cross-layer outcome, hard/quality prerequisite behavior, a forbidden boundary or untrusted-source attempt, a real/false new-pattern gap and UI async/responsive/accessibility states.
+
+Store the untouched input, preset/skill/model/toolchain IDs, input digests, route/read trace, patch or artifact, command log and observed failure. A skill change invalidates affected cases. Publication fails when the agent reaches the right output only because expected answers leaked into context, skips a required conditional reference, crosses an allowed-path boundary, or claims completion beyond evidence.
+
+### Standards and requested-outcome gates
+
+Review every walking slice on two independent axes:
+
+| Gate | Passes only when |
+| --- | --- |
+| Pattern/standards conformance | Locked ownership, dependency, API, payload/result, security, accessibility and framework-native contracts plus positive/negative fixtures pass |
+| Requested outcome | The actual acceptance behavior, user flow, responsive interaction, failure recovery and business result work for representative users/data |
+
+A visually polished or pattern-conformant screen can still fail its user outcome. A working happy path can still violate authorization, accessibility or preset architecture. Store separate verdicts and block the slice if either required axis fails.
 
 ## Tier-aware implementation phases
 
@@ -176,6 +193,8 @@ Do not mix unrelated layers merely to maximize parallel work.
 | Webhook/provider | Adapter contract plus failure/authenticity fixtures |
 | Job/outbox/inbox/import | Real persistence, duplicate/crash/replay tests |
 | Shared UI/route journey | Component accessibility/interaction; critical browser smoke |
+| Preset skill or router | Syntax/integrity checks plus clean-context trigger, conformance, stop and outcome forward-evaluation cases |
+| UI design contract | Token/state/API checks, representative responsive renders and a real payload/action-result walking slice |
 | Performance/capacity | Representative data/load/query/bundle evidence |
 | Release/recovery | Deploy/migration/restore/failover or bounded lab evidence |
 
@@ -199,4 +218,4 @@ Do not report completion from code volume, green build alone, or planned-but-une
 
 ## Stop conditions
 
-Stop when authoring creates root app source, installation would overwrite undeclared work, manifest/template/guides disagree, implementation begins with an incompatible/unknown blocking stack slot, plan artifacts disagree, a slice cannot state its user outcome and owner, migrations/events cannot coexist across deploy, UI testing becomes the main proof of server behavior, or later phases are used to postpone security/data/recovery decisions required by the current slice.
+Stop when authoring creates root app source, installation would overwrite undeclared work, manifest/template/skills/patterns disagree, implementation begins with an incompatible/unknown blocking stack slot, plan artifacts disagree, a slice cannot state its user outcome and owner, migrations/events cannot coexist across deploy, UI testing becomes the main proof of server behavior, or later phases are used to postpone security/data/recovery decisions required by the current slice.

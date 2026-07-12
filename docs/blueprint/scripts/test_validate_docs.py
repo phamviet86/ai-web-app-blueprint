@@ -505,6 +505,7 @@ steps:
 # "docs/presets/**"
 # PYTHONPATH=docs/blueprint python3 -m unittest discover -s docs/blueprint/scripts -p 'test_*.py'
 # python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .
+# python3 docs/blueprint/scripts/validate_presets.py docs/presets
 # python3 docs/blueprint/scripts/score_readiness.py docs/blueprint/reference-app-blueprint/examples/basic-web-artifacts/readiness.json --json --expect not-ready
 """
         with tempfile.TemporaryDirectory() as temporary:

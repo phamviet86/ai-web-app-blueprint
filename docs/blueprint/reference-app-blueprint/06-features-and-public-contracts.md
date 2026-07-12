@@ -71,7 +71,7 @@ Names may differ by preset, but [feature-plan](templates/feature-plan.md) maps e
 
 Every verified preset includes at least one closed create/read/list-or-detail slice. If it claims dynamic data surfaces, the slice also proves applicable search/filter/sort/pagination; a verified calendar adds range/timezone/view behavior. If it claims edit/mutation, prove normalized input, server field error, conflict/denial, success invalidation and focus/feedback behavior.
 
-The flow is surface/input -> feature client contract -> action/query -> service -> repository/adapter -> stable result -> feature client/view. Each handoff is versioned or mechanically typed/validated, and the preset's AI guides route changes to the role that owns the contract rather than the file nearest the symptom.
+The flow is surface/input -> feature client contract -> action/query -> service -> repository/adapter -> stable result -> feature client/view. Each handoff is versioned or mechanically typed/validated, and the preset's manifest-routed AI skills route changes to the role that owns the contract rather than the file nearest the symptom.
 
 ## Workspaces
 

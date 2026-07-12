@@ -1,13 +1,14 @@
 # Start here
 
-This repository supports four distinct modes. Declare one before changing files.
+This repository supports five distinct modes. Declare one before changing files.
 
 | Mode | Choose it when | First read | Allowed primary output |
 | --- | --- | --- | --- |
 | `BLUEPRINT_MAINTENANCE` | Improving portable rules or governance | [`docs/blueprint/README.md`](docs/blueprint/README.md) | `docs/blueprint/**` |
 | `AUTHOR_PRESET` | Creating or upgrading a reusable stack combo | [`docs/blueprint/reference-app-blueprint/10-preset-authoring-and-instantiation.md`](docs/blueprint/reference-app-blueprint/10-preset-authoring-and-instantiation.md) | `docs/presets/<preset-id>/**` |
-| `APP_BOOTSTRAP` | Creating an app from an accepted preset | [`docs/presets/README.md`](docs/presets/README.md) | framework root files, `src/**`, and preset lock/evidence |
-| `APP_DEVELOPMENT` | Changing an already-instantiated app | [`AGENTS.md`](AGENTS.md) plus the locked preset guides | paths owned by the selected task guide |
+| `APP_BOOTSTRAP` | Creating an app from a verified preset (`INSTANTIATE_PRESET` phase in the reference-app guides) | [`docs/presets/README.md`](docs/presets/README.md) | framework root files, `src/**`, and preset lock/evidence |
+| `APP_DEVELOPMENT` | Changing an already-instantiated app | [`AGENTS.md`](AGENTS.md) plus the locked preset skills | paths owned by the selected task skill |
+| `NEW_PATTERN` | No locked preset pattern can satisfy a required capability | [`AGENTS.md`](AGENTS.md), locked `new-pattern` skill, then the exact blueprint owner | smallest local pattern, fitness evidence, and approved catalog/ADR delta |
 
 The preset catalog is intentionally empty today. Do not pretend a preset is verified or generate an app from a nonexistent preset. If a user needs a new combo, switch explicitly to `AUTHOR_PRESET`, finish and verify that preset, then instantiate it as a separate operation.
 
@@ -27,7 +28,7 @@ Instantiate an app later:
 
 Develop an existing app:
 
-> Read AGENTS.md and the selected preset lock. Turn this requirement into tasks, route each task to the matching preset guide, implement the smallest coherent vertical change, and run the guide's verification.
+> Read AGENTS.md and the selected preset lock. Turn this requirement into a vertical task graph, select locked pattern IDs and matching preset skills, then satisfy each skill's completion and verification criteria.
 
 ## Human decisions AI must not invent
 

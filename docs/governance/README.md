@@ -4,7 +4,7 @@ This directory is reserved for repository-local state created when a preset is i
 
 An app bootstrap should create, at minimum:
 
-- `preset-lock.json`: preset ID/version, immutable source revision, blueprint version/revision, stack lock digest, materialization timestamp, and verification result;
+- `preset-lock.json`: preset ID/version, immutable source revision, blueprint version/revision, manifest/template/skill/pattern/source/design/evaluation/integrity digests, qualification evidence references, materialization timestamp, and verification result;
 - a local decision/override record for deliberate deviations;
 - links to the current system profile, artifact registry, architecture exceptions, and verification evidence when those artifacts apply.
 

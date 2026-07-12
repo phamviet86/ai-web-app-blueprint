@@ -28,6 +28,8 @@ Instantiate through [schema mapping](README.md) as `artifact_type: stack-profile
 - [ ] Every blocking compatibility concern is `PASS`.
 - [ ] Every `CONDITIONAL` result is an explicit constraint with owner/expiry.
 - [ ] Exact compatible versions and lockfile policy are selected.
+- [ ] API claims link exact-version official sources; Context7 lookups record library ID, scope, source URL and retrieval date.
+- [ ] Third-party advisory inputs are commit-pinned, license-reviewed and excluded from ambient/global execution.
 - [ ] Every blocking spike passes.
 
 Only then set status to `accepted`; an unresolved contradiction makes it `rejected`, otherwise use `draft` or `in-review`. An accepted artifact replaced by a newer accepted revision becomes `superseded`.
@@ -70,6 +72,16 @@ Only then set status to `accepted`; an unresolved contradiction makes it `reject
 
 | Concern | PASS / CONDITIONAL / REJECT | Evidence | Constraint/exception owner and expiry |
 | --- | --- | --- | --- |
+
+## API and source provenance
+
+| Role/claim | Exact package version / lock | Official source URL/version | Context7 library ID / scoped query / `retrieved_at` | Compatibility conclusion / `EVID-*` | Review deadline / invalidation |
+| --- | --- | --- | --- | --- | --- |
+
+| Advisory source | Role | Commit/version | License | Read-only/sandbox policy | Accepted/rejected guidance | Refresh trigger |
+| --- | --- | --- | --- | --- | --- | --- |
+
+Official exact-version documentation owns API behavior. Context7 retrieves documentation; advisory skills/datasets propose candidates only. Record missing hard source evidence as blocking and a missing quality source with its declared fallback and narrowed claim.
 
 ## Configuration inventory
 

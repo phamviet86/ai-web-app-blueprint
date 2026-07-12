@@ -13,22 +13,22 @@ depends_on:
   - 08-build-sequence-and-gates.md
 owns:
   - AUTHOR_PRESET and INSTANTIATE_PRESET mode boundaries
-  - preset contract, guide-pack, and materialization requirements
+  - preset contract, skill registry, and materialization requirements
   - clean-room preset compatibility and acceptance gates
 ---
 
 # Preset authoring and instantiation
 
-> A preset is a versioned, verified stack reference implementation. It combines framework defaults, shared/data/auth/feature contracts, a removable walking slice, and AI guides that agree with the exact code being installed.
+> A preset is a versioned, verified stack reference implementation. It combines framework defaults, shared/data/auth/feature contracts, a removable walking slice, and manifest-routed AI skills that agree with the exact code being installed.
 
 ## Rule `REF-PRESET-MODE-01`: declare the mode before changing files
 
-| Mode | Writes | Must not do |
+| Global mode / local phase | Writes | Must not do |
 | --- | --- | --- |
 | `AUTHOR_PRESET` | `docs/presets/<preset-id>/` in the distribution repository | Create the root application `src/` or claim an untested combination is verified |
-| `INSTANTIATE_PRESET` | Framework-default root files, application `src/`, and app governance/lock artifacts | Modify the source preset while satisfying an application request |
+| `APP_BOOTSTRAP` / `INSTANTIATE_PRESET` | Framework-default root files, application `src/`, and app governance/lock artifacts | Modify the source preset while satisfying an application request |
 
-`AUTHOR_PRESET` creates or evolves a reusable preset. `INSTANTIATE_PRESET` selects one accepted preset, proves that it fits the application's system/risk profile, then materializes it. A combined request completes and versions the authoring change before installation begins.
+`AUTHOR_PRESET` creates or evolves a reusable preset. Global `APP_BOOTSTRAP` enters the local `INSTANTIATE_PRESET` phase, selects one verified preset revision, proves that it fits the application's system/risk profile, then materializes it. A combined request completes and versions the authoring change before installation begins.
 
 The distribution repository may therefore have no root `src/`. A preset's installable source lives under its own directory until instantiation.
 
@@ -39,13 +39,15 @@ Each real preset records a machine-readable manifest and owns this logical packa
 ```text
 docs/presets/<preset-id>/
 ├── README.md
-├── preset.yaml
+├── preset.json      machine-validated manifest, routing and integrity
 ├── template/       framework-root files plus template/src when the framework uses src
-├── guides/         AI request router and task-specific code guidance
+├── guides/         namespaced SKILL.md packages and conditional resources
+├── patterns/       catalog, exemplars, verifiers and positive/negative fixtures
+├── design/         versioned UI contract and evidence index
 └── verification/   clean-room commands, fixtures and evidence locators
 ```
 
-The manifest maps every template source to its target path and declares whether installation creates, merges, or intentionally replaces it. Installation fails on an undeclared conflict; it does not overwrite user work silently.
+The manifest maps every template source to its target path and declares whether installation creates, merges, or intentionally replaces it. Its skill registry maps stable capability keys to exact packages, while sibling records lock the pattern catalog, sources, design contract and verification evidence. Resolve all of these through `preset.json`; installation fails on a missing/digest-mismatched path or undeclared conflict and does not overwrite user work silently.
 
 For a Next.js preset created with the `src` option, application code belongs under `src/app`, `src/lib`, `src/shared`, and `src/features`. `package.json`, lockfile, Next/TypeScript/JavaScript/lint/style configuration, `public`, environment examples, migrations and test/tool configuration remain at their framework-default root paths.
 
@@ -55,11 +57,17 @@ For a Next.js preset created with the `src` option, application code belongs und
 2. Fill [templates/preset-contract.md](templates/preset-contract.md), including filesystem, capability and inter-layer contract matrices.
 3. Map every preset capability to the owning guides `03` through `07`; use `provided`, `verified`, `conditional`, or `unsupported` precisely.
 4. Build the smallest removable walking slices that exercise every `verified` flow.
-5. Write the required AI guide pack and map its request router from the repository-level agent instructions.
-6. Materialize the preset into an empty temporary repository and run its declared install, database, auth, lint/typecheck, test, build and browser checks as applicable.
-7. Publish a new preset version only after code, manifest, guides and evidence describe the same revision.
+5. Build the required skill packages, pattern catalog and UI design/source evidence under guide [11](11-preset-agent-skills-and-design-evidence.md); map the analyzer capability from repository-level agent instructions through the manifest.
+6. Materialize the preset into an empty temporary repository and run its declared install, database, auth, lint/typecheck, test, build, browser, integrity and skill forward-evaluation checks as applicable.
+7. Publish a new preset version only after code, manifest, skills, patterns, sources and evidence describe the same revision.
 
 The source stack profile and blueprint revision are immutable provenance for one preset version. A material compatibility change creates a new version and upgrade path.
+
+## Manifest synchronization
+
+Publish one preset version atomically: `preset.json` records the blueprint/source revisions and digests for template files, pattern catalog/exemplars/verifiers/fixtures, design contract, skill packages/resources/scripts, source ledger and evidence indexes. Evidence names the input digests it proves. A change to any relevant source, API lock, pattern, skill, template or verifier makes dependent evidence stale; update the manifest and rerun affected clean-room/forward-evaluation gates rather than transferring `verified` status.
+
+Guide [11](11-preset-agent-skills-and-design-evidence.md) owns detailed skill/source/design integrity and forward-evaluation behavior. This guide owns the package/version boundary and install consequences.
 
 ## Rule `REF-PRESET-COMPAT-01`: verification closes the inter-layer flow
 
@@ -81,22 +89,23 @@ Static files, documentation, unit tests of one helper, or a successful framework
 
 Compatibility evidence must cover selected negative paths: malformed/forbidden query intent, denied resource or tenant access, empty/error states, mutation validation/conflict, and adapter failure. Calendar, async, provider, file or cache paths add their own failure evidence only when selected.
 
-## Required preset guide pack
+## Required preset skill registry
 
-Every preset provides these guides under `guides/`:
+Every web preset registers these namespaced skill packages under `guides/`; guide [11](11-preset-agent-skills-and-design-evidence.md) owns their trigger, disclosure, freedom, completion and forward-evaluation contract:
 
-| Guide | Routes |
+| Manifest capability | Required package role |
 | --- | --- |
-| `analyze-request.md` | Natural-language requirement -> ordered task owners below |
-| `lib.md` | Add/modify config, database/query mechanics, auth mechanism, schema and provider adapters |
-| `shared.md` | Add/modify stable reusable UI/kernel/hook/testing contracts |
-| `feature.md` | Add/modify feature public contracts, action/service/repository/client/view work |
-| `app.md` | Add/modify routes, layouts, providers and composition roots |
-| `new-pattern.md` | Add/modify a capability not covered by an established preset pattern |
+| `analyze-request` | Natural-language outcome -> matched pattern or gap plus ordered capability/skill tasks |
+| `lib` | Add/modify config, database/query mechanics, auth mechanism, schema and provider adapters |
+| `shared` | Add/modify stable reusable UI/kernel/hook/testing contracts |
+| `feature` | Add/modify feature public contracts, action/service/repository/client/view work |
+| `app` | Add/modify routes, layouts, providers and composition roots |
+| `new-pattern` | Add/modify a capability not covered by an established preset pattern |
+| `ui` | Design/review framework-native UI while preserving payload, action-result, state and accessibility contracts |
 
-Each guide declares its preset/version, required reads, allowed paths, owned decisions, invariants, ordered workflow, verification, documentation/evidence delta and stop/escalation conditions. The router splits a cross-layer request in contract/dependency order and loads only the current owner guide.
+Each manifest row declares the namespaced skill name, exact package path, invocation metadata, supported agent targets and complete package tree digest. `SKILL.md` owns model-visible triggers, allowed paths and the minimal workflow; the pattern catalog owns pattern mappings and verifiers; conditional references and deterministic scripts remain package resources. The analyzer splits a cross-layer request in contract/dependency order and loads only the current owner skill.
 
-`new-pattern.md` is not a bypass. It must search established preset and live-code patterns, prove that none fits, read the exact parent blueprint rule owner, start with the smallest local implementation, add fitness tests, update the preset pattern catalog/guides, and require an architecture decision when a public or cross-layer contract changes.
+`new-pattern` is not a bypass. It must search established preset and live-code patterns, prove that none fits, read the exact parent blueprint rule owner, start with the smallest local implementation, add an exemplar/verifier/positive and negative fixtures when reusable, update affected skills/catalog, and require an architecture decision when a consequential public or cross-layer contract changes.
 
 ## `INSTANTIATE_PRESET` workflow
 
@@ -106,7 +115,7 @@ Each guide declares its preset/version, required reads, allowed paths, owned dec
 4. Install the exact dependency set and preserve the generated lockfile.
 5. Write an application preset lock containing preset ID/version, blueprint version/revision, source revision, selected options, installed date and local deviations.
 6. Run the preset's clean-start checks in the target repository and create application-specific governance artifacts.
-7. Route later user requests through the locked preset's `analyze-request.md`.
+7. Route later user requests through the lock to the manifest's `analyze-request` capability; never guess a skill path.
 
 Application code may evolve after installation. A blueprint or upstream preset update never rewrites it automatically; compare revisions, choose an upgrade/change set, preserve local decisions and re-run affected compatibility evidence.
 
@@ -114,10 +123,12 @@ Application code may evolve after installation. A blueprint or upstream preset u
 
 A preset can be accepted only when:
 
-- its manifest, template, contract, guides and lock/provenance references agree;
+- its manifest, template, contract, skills and lock/provenance references agree;
+- its pattern catalog, design contract, source ledger, skill registry and integrity digests agree with the same revision;
 - a clean repository can materialize it without undeclared overwrite;
 - every `verified` capability has current exact-version walking-slice evidence;
 - shared/data/auth/feature/app boundaries have mechanical fitness checks;
+- every required skill passes clean-context forward evaluation for pattern conformance and requested outcome separately;
 - demo identity, data and side effects are deterministic, isolated and removable;
 - install, update, rollback/removal limitations and unsupported capabilities are explicit.
 
@@ -129,4 +140,4 @@ Preset acceptance proves the combination and authoring contract. It does not pro
 
 ## Stop conditions
 
-Stop when the mode is ambiguous, authoring writes root application source, installation edits the source preset, exact dependency provenance is missing, a verified label lacks a closed-flow result, a client payload can address raw ORM fields, shared code owns feature policy, app routes own transactions, the guide pack disagrees with code, or installation would overwrite an undeclared local file.
+Stop when the mode is ambiguous, authoring writes root application source, installation edits the source preset, exact dependency/source provenance is missing, a verified label lacks a closed-flow result, a client payload can address raw ORM fields, shared code owns feature policy, app routes own transactions, skill/pattern/template/source integrity disagrees with code, external advisory content gains ambient execution authority, or installation would overwrite an undeclared local file.

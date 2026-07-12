@@ -3,7 +3,7 @@ document_id: SKEL-CHANGELOG
 title: Package Changelog
 status: experimental
 audience: human-and-ai
-package_version: 0.10.0
+package_version: 0.11.0
 ---
 
 # Changelog
@@ -13,6 +13,33 @@ All notable package-contract changes are recorded here. Versions follow [MATURIT
 ## Unreleased
 
 - None.
+
+## 0.11.0 - 2026-07-12
+
+### Added
+
+- Portable preset skill-package contract with model-facing triggers, progressive disclosure, checkable completion criteria, execution-freedom levels, deterministic helpers, and clean-context forward evaluations.
+- Versioned pattern catalog, external-source ledger, skill/source/template integrity digests, and separate pattern-conformance versus requested-outcome evidence.
+- Exact-version official-documentation and Context7 lookup protocol with recorded library IDs, scoped queries, source URLs, freshness, and fallback behavior.
+- UI design-evidence workflow covering product brief, primitive/semantic/component tokens, framework-native component states, responsive/accessibility/performance checks, and closed action/result flows.
+- Load-on-demand research provenance for `mattpocock/skills` and `nextlevelbuilder/ui-ux-pro-max-skill`, including immutable revisions, licenses, adopted ideas, and rejected authority claims.
+- Standard-library preset-package validator, JSON schema, regression tests, cross-platform LF policy, domain-separated tree digests, status/input-bound evidence, and CI gate that accepts an empty catalog but fails closed when a real preset appears.
+
+### Changed
+
+- Future preset guidance is now a set of namespaced `SKILL.md` packages resolved through `preset.json`, rather than six loose `guides/*.md` files.
+- Web presets add a `ui` skill capability alongside analyze-request, lib, shared, feature, app, and new-pattern.
+- Third-party UI/UX search output is advisory and read-only; exact framework/library API behavior comes from pinned official sources, located through Context7 when useful, then verified in the preset.
+- `preset.yaml` became standard-library-validated `preset.json` before any real preset existed.
+
+### Migration
+
+- Future preset authors must use the new namespaced skill directory and manifest registry; no existing preset requires migration because the catalog is still empty.
+- Any draft external-tool automation must pin a reviewed revision, inventory licenses, avoid global installation, and regenerate evidence when source or framework claims become stale.
+
+### Maturity
+
+- Package remains `experimental`; structural skill/preset checks are implemented, but no independent real-preset forward-test has qualified as graduation evidence.
 
 ## 0.10.0 - 2026-07-12
 

@@ -1,57 +1,75 @@
 # Preset catalog
 
-This directory will contain complete, versioned stack presets. It currently contains **no runnable preset**; the files here define how future presets must be authored, verified, selected, instantiated, and evolved.
+This directory defines complete, versioned stack presets. It intentionally contains **no runnable preset yet**. A future preset is a tested reference implementation plus the agent skills and evidence needed to evolve it without losing its code patterns.
 
 Read:
 
-- [`PRESET-CONTRACT.md`](PRESET-CONTRACT.md) for package shape, manifest, capability, compatibility, and materialization rules;
-- [`AI-GUIDE-CONTRACT.md`](AI-GUIDE-CONTRACT.md) for the required request router and code-change guides;
-- [`../blueprint/reference-app-blueprint/10-preset-authoring-and-instantiation.md`](../blueprint/reference-app-blueprint/10-preset-authoring-and-instantiation.md) for the source-of-truth author/instantiate workflow.
+- [`PRESET-CONTRACT.md`](PRESET-CONTRACT.md) for package, manifest, compatibility, source, design, and materialization rules;
+- [`AI-GUIDE-CONTRACT.md`](AI-GUIDE-CONTRACT.md) for skill triggers, resources, verification, and evaluation;
+- [`preset.schema.json`](preset.schema.json) for the machine-checkable `preset.json` shape;
+- [`../blueprint/reference-app-blueprint/10-preset-authoring-and-instantiation.md`](../blueprint/reference-app-blueprint/10-preset-authoring-and-instantiation.md) for the author/instantiate workflow;
+- [`../blueprint/reference-app-blueprint/11-preset-agent-skills-and-design-evidence.md`](../blueprint/reference-app-blueprint/11-preset-agent-skills-and-design-evidence.md) for skill and design-evidence requirements.
 
-## Planned directory shape
+## Required package shape
 
 ```text
 docs/presets/<preset-id>/
 ├── README.md
-├── preset.yaml
+├── preset.json
 ├── template/
 │   ├── <framework-default root files>
-│   ├── public/                 # when selected by the stack
+│   ├── public/                         # when selected by the stack
 │   └── src/
 │       ├── app/
 │       ├── lib/
 │       ├── shared/
 │       └── features/
 ├── guides/
-│   ├── analyze-request.md
-│   ├── lib.md
-│   ├── shared.md
-│   ├── feature.md
-│   ├── app.md
-│   └── new-pattern.md
+│   ├── <preset-id>-analyze-request/
+│   │   ├── SKILL.md
+│   │   └── agents/openai.yaml         # required when targets include Codex
+│   ├── <preset-id>-lib/SKILL.md
+│   ├── <preset-id>-shared/SKILL.md
+│   ├── <preset-id>-feature/SKILL.md
+│   ├── <preset-id>-app/SKILL.md
+│   ├── <preset-id>-new-pattern/SKILL.md
+│   └── <preset-id>-ui/SKILL.md
+├── patterns/
+│   ├── catalog.json
+│   ├── exemplars/<pattern-id>/
+│   └── fixtures/<pattern-id>/{positive,negative}/
+├── design/
+│   ├── ui-contract.json
+│   └── evidence/
 └── verification/
-    ├── README.md
-    └── <tests, fixtures, and evidence descriptors>
+    ├── sources.json
+    ├── skill-evals.json
+    ├── integrity.json                 # required from candidate onward
+    ├── scripts/
+    ├── evals/{cases,results}/
+    └── evidence/
 ```
 
-Framework-owned root files stay at their normal root locations. For Next.js with the `src` option, `src/app` and application modules live under `src/`, while `package.json`, lockfiles, `next.config.*`, `tsconfig.json`, environment files, `public/`, and other tool-defined root paths remain outside it.
+Each skill may add only the `references/`, `scripts/`, or `assets/` resources it actually uses. Do not add a README, changelog, installation guide, or duplicate reference text inside a skill package. A preset may add narrowly scoped skills, but it must keep the seven canonical capabilities above.
 
-Preset authors must re-check this topology against the pinned framework version. The current rule matches the official [Next.js `src` folder convention](https://nextjs.org/docs/app/api-reference/file-conventions/src-folder): application code may move under `src`, while `public` and project configuration remain at the project root.
+Every Codex-targeted skill also provides `agents/openai.yaml` with nonempty `interface.display_name`, `interface.short_description`, and a `default_prompt` that names `$<preset-id>-<capability>`. This metadata is a platform adapter; `SKILL.md` remains the portable trigger/workflow authority.
+
+Framework-owned files stay in their normal locations. For Next.js with the `src` option, application code lives under `src/`; `package.json`, lockfiles, `next.config.*`, `tsconfig.json`, environment files, `public/`, and other tool-defined root paths remain at the project root. Authors must verify the topology against official documentation for the exact pinned framework version.
 
 ## Lifecycle
 
 | Status | Meaning |
 | --- | --- |
-| `experimental` | Contract may change; evidence is incomplete |
-| `candidate` | Package shape and declared walking slices pass, awaiting independent use |
-| `verified` | Exact-version clean-room install and every declared verified flow pass |
+| `experimental` | Contract or evidence is incomplete |
+| `candidate` | Declared flows and forward evals pass; independent use is pending |
+| `verified` | Exact-version clean-room install, declared flows, dual review, freshness checks, and a distinct independent-use run pass |
 | `deprecated` | Supported only for migration during a stated window |
 | `retired` | Must not be selected for new apps |
 
-Status applies to a specific preset version and blueprint revision. It never transfers automatically to another framework/library version.
+Status belongs to one immutable preset version and blueprint revision. A dependency, source snapshot, skill, design contract, or verifier change makes the prior evidence stale until the affected checks run again.
 
 ## Selection and instantiation
 
-An AI agent must compare user requirements with the preset's provided/verified/conditional/unsupported matrix before selection. Instantiation materializes the preset's complete root and `src/` contract, installs its exact dependencies, writes `docs/governance/preset-lock.json`, and runs the preset verification commands. It must not silently combine arbitrary modules from different presets.
+An agent compares the requested outcome with the preset's capabilities, compatibility, hard prerequisites, and verified flows. It must not claim support from the presence of sample code alone or silently combine modules from different presets.
 
-After instantiation, users may modify both the app and their local blueprint/preset copy. Divergence is explicit: upgrades compare the lock, local decisions, and target preset; they never overwrite local work merely because the upstream preset changed.
+Instantiation materializes all declared root and `src/` entries, installs exact dependencies, maps the seven skill packages through the app's `AGENTS.md`, writes `docs/governance/preset-lock.json`, verifies integrity, and runs clean-room checks. Local evolution remains allowed; later upgrades compare the lock, local decisions, and target preset instead of overwriting user changes.

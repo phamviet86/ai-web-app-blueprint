@@ -33,17 +33,17 @@ This package instantiates the parent [production repo blueprint](../README.md) a
 
 It does not redefine the core architecture rules, provide a universal source-code template, or require every optional vendor. Core rule owners remain in guides `01` through `17`; this package decides where a reference app demonstrates them. `FULL_SHOWCASE` is an explicit breadth goal, not the default for an ordinary application.
 
-## Operating modes
+## Global modes and local phases
 
-Declare one mode before changing files; guide [10-preset-authoring-and-instantiation.md](10-preset-authoring-and-instantiation.md) owns the boundary:
+Declare one global root mode before changing files; guide [10-preset-authoring-and-instantiation.md](10-preset-authoring-and-instantiation.md) owns the boundary. `INSTANTIATE_PRESET` below is the local phase name inside global `APP_BOOTSTRAP`, not another primary mode.
 
 | Mode | Outcome |
 | --- | --- |
 | `AUTHOR_PRESET` | Create or version a reusable exact-stack package under `docs/presets/<preset-id>/`; the distribution repository's root `src/` remains absent |
-| `INSTANTIATE_PRESET` | Select a compatible preset, materialize framework-default root files plus application `src/`, write an app preset lock and verify the clean start |
-| Reference-app build without a reusable preset | Use guides `01`–`09` directly and produce app-specific artifacts/evidence |
+| `APP_BOOTSTRAP` / `INSTANTIATE_PRESET` phase | Select a compatible verified preset, materialize framework-default root files plus application `src/`, write an app preset lock and verify the clean start |
+| `APP_BOOTSTRAP` or `APP_DEVELOPMENT` without a reusable preset | Use guides `01`–`09` directly and produce app-specific artifacts/evidence |
 
-Preset authoring and application implementation may occur in one request only as ordered phases: accept/version the preset first, then instantiate that immutable revision. Never edit source preset files while satisfying an app-local code task.
+Preset authoring and application implementation may occur in one request only as ordered phases: verify/version the preset first, then instantiate that immutable revision. Never edit source preset files while satisfying an app-local code task.
 
 ## Capability tier and default domain
 
@@ -68,7 +68,7 @@ When the user asks to build a live demo/reference app:
 3. Confirm a current parent [system/risk profile](../templates/system-profile.md), or create it before recommending a stack. Unknown blocking drivers must have an owner and resolution gate.
 4. Select the smallest capability tier that covers the declared risks and record any additive capabilities or owned `N/A` decisions.
 5. If the stack is incomplete, ask one grouped question covering the missing high-impact choices from guide `01`.
-6. Recommend a maintained profile or accepted preset only when it fits; otherwise create a project-local profile or enter `AUTHOR_PRESET`. Candidate mappings never bypass provenance and compatibility spikes.
+6. Recommend a maintained profile or verified preset revision only when it fits; otherwise create a project-local profile or enter `AUTHOR_PRESET`. Candidate mappings never bypass provenance and compatibility spikes.
 7. Confirm whether the target is reusable preset, local showcase, public resettable demo, or production starter.
 8. Fill the required decision artifacts below in owner order.
 9. Present the decision-complete plan before generating a broad codebase.
@@ -81,7 +81,7 @@ Do not conduct an open-ended technology interview. Resolve low-impact choices fr
 | Artifact | Required when | Required outcome |
 | --- | --- | --- |
 | Parent [system-profile](../templates/system-profile.md) | Always | Drivers, risk, quality targets, topology and applicable controls that constrain the stack |
-| [preset-contract](templates/preset-contract.md) | Every `AUTHOR_PRESET`; referenced by every `INSTANTIATE_PRESET` | Exact stack/provenance, materialization map, capability/inter-layer contracts, guide pack and clean-room evidence |
+| [preset-contract](templates/preset-contract.md) | Every `AUTHOR_PRESET`; referenced by every `INSTANTIATE_PRESET` | Exact stack/provenance, materialization map, capability/inter-layer contracts, manifest-routed skills/patterns and clean-room evidence |
 | Application preset lock | Every `INSTANTIATE_PRESET` | Installed preset/blueprint/source revisions, selected options, install date and local deviations |
 | [stack-profile](templates/stack-profile.md) | Always | Compatible runtime, UI, identity, data, services, testing, and deployment choices |
 | [capability-coverage](templates/capability-coverage.md) | Always | Selected tier/additions map to owners, journeys, routes, data, and evidence; unselected rows have owned rationale |
@@ -118,7 +118,8 @@ Capability traceability does not replace the parent readiness universe. Each sel
 | [07-app-routes-and-journeys.md](07-app-routes-and-journeys.md) | Logical route tree, access/runtime policy and end-to-end journeys |
 | [08-build-sequence-and-gates.md](08-build-sequence-and-gates.md) | Artifact-first planning, vertical slices and evidence gates |
 | [09-demo-operations-and-extension.md](09-demo-operations-and-extension.md) | Safe demo mode, seed/reset, testing, observability, release and product evolution |
-| [10-preset-authoring-and-instantiation.md](10-preset-authoring-and-instantiation.md) | Preset modes, package/guide contract, clean-room authoring and conflict-safe installation |
+| [10-preset-authoring-and-instantiation.md](10-preset-authoring-and-instantiation.md) | Preset modes, package/skill registry contract, clean-room authoring and conflict-safe installation |
+| [11-preset-agent-skills-and-design-evidence.md](11-preset-agent-skills-and-design-evidence.md) | Real preset skill packages, triggers/disclosure/completion, pattern forward-evaluation, source trust and UI design evidence |
 | [../profiles/nextjs-prisma-antd.md](../profiles/nextjs-prisma-antd.md) | Candidate Next.js/Prisma/Ant Design mapping; not acceptance evidence until project-local verification |
 | [../profiles/django-postgresql-htmx.md](../profiles/django-postgresql-htmx.md) | Maintained Django/PostgreSQL/HTMX builder profile |
 | [examples/nextjs-typescript-shadcn-drizzle.md](examples/nextjs-typescript-shadcn-drizzle.md) | Non-authoritative worked Next.js/TypeScript/shadcn/TanStack/Better Auth/PostgreSQL/Drizzle stack decision |
@@ -130,23 +131,24 @@ Read only the required row, plus the next unresolved owner.
 
 | Task | Required reads | Add only when needed |
 | --- | --- | --- |
-| Author or revise a preset | README, 01, 10 | Guides `02`–`09` only for the layer/capability being authored; preset-contract template |
-| Select or install a preset | README, 01, 10 | Selected preset contract/manifest/guides and app system profile |
+| Author or revise a preset | README, 01, 10, 11 | Guides `02`–`09` only for the layer/capability being authored; preset-contract template |
+| Author or forward-test preset skills/UI | README, 11 | Guide 04 for shared UI, guide 08 for gates, selected pattern/source records |
+| Select or install a preset | README, 01, 10 | Selected preset contract/manifest/skills/patterns and app system profile |
 | Ask for/select a stack | README, 01 | Maintained Django profile, candidate Next mapping with mandatory verification, worked example, or newly generated project-local profile |
 | Start a reference-app plan from scratch | README, 01, 02, 08 | Complete system/stack first, then route through artifact owners `03`–`07` |
 | Consolidate already-filled artifacts | README, 08 | `reference-app-plan` template; do not invent missing decisions |
 | Design the database | 03 | Parent `09` for read models; parent `12` for lifecycle/migrations |
-| Design shared or platform | 04 or 05 | Matching structured template; parent `03`; parent `11` for trust boundaries |
+| Design shared or platform | 04 or 05 | Matching structured template; this package's guide 11 for preset UI/skills; parent `03` and parent `11` for trust boundaries |
 | Design features and contracts | 06 | Parent `02`, `04`, or `05` according to the selected flow |
 | Design routes and journeys | 07 | Selected stack profile; parent `10` for runtime/UI budgets |
-| Build one vertical slice | 08 | Selected feature guide/plan plus exactly one parent flow owner |
+| Build one vertical slice | 08 | Selected feature skill/plan plus exactly one parent flow owner |
 | Publish or evolve the demo | 09 | Parent `14`, `15`, or `16` according to the decision |
 
 `depends_on` is lookup metadata, not a request to preload every parent guide. After a decision artifact is complete, start the next workstream with that artifact and its current owner instead of retaining the full planning context.
 
 ## Completion contract
 
-An authored preset is complete only when its manifest, template, contract and six-guide pack agree; clean-room materialization passes; and every `verified` capability closes its exact-version inter-layer walking slice. `provided`, `conditional` and `unsupported` remain explicit. Preset acceptance is not application production readiness.
+An authored web preset is complete only when its manifest, template, contract, pattern catalog, source ledger and seven namespaced skill packages agree by digest; clean-room materialization and clean-context skill forward evaluations pass both pattern-conformance and requested-outcome gates; and every `verified` capability closes its exact-version inter-layer walking slice. `provided`, `conditional` and `unsupported` remain explicit. Preset acceptance is not application production readiness.
 
 A reference application is complete only when:
 

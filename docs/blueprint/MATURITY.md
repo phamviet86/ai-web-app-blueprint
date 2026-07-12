@@ -3,7 +3,7 @@ guide_id: SKEL-MATURITY
 title: Documentation Package Version and Maturity Policy
 status: experimental
 audience: human-and-ai
-package_version: 0.10.0
+package_version: 0.11.0
 control_catalog_version: 1.0.0
 artifact_schema_version: "1.0"
 read_when:
@@ -28,11 +28,11 @@ owns:
 
 | Field | Value |
 | --- | --- |
-| Package version | `0.10.0` |
+| Package version | `0.11.0` |
 | Package maturity | `experimental` |
 | Control catalog | `1.0.0` in guide `08` |
 | Artifact schema | `1.0` in [templates/README.md](templates/README.md) |
-| Required validator | `python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .` |
+| Required validators | Docs: `python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .`; presets: `python3 docs/blueprint/scripts/validate_presets.py docs/presets` |
 | Declaration date | 2026-07-12 |
 
 `9.5/10` is the design coverage target. It is not the current package maturity label and is never inherited by a repository. An implementation earns a readiness claim only through guide `08` against current evidence.

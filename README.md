@@ -38,16 +38,17 @@ For a Next.js preset, application code may live under `src/`, for example `src/a
 
 1. **Maintain the blueprint** — improve portable architecture rules in `docs/blueprint`.
 2. **Author a preset** — create one complete exact-version implementation under `docs/presets/<preset-id>` and verify its inter-layer walking slices.
-3. **Instantiate an app** — select a compatible preset, materialize its root and `src/` files, record the selected revision, then route all code changes through that preset's guides.
-4. **Extend an app** — let the user describe the outcome; the AI request router selects the relevant lib/shared/feature/app guide. A genuinely new pattern returns to the exact blueprint owner before it changes repository conventions.
+3. **Instantiate an app** — select a compatible preset, materialize its root and `src/` files, record the selected revision/digests, then route changes through its skill registry.
+4. **Extend an app** — let the user describe the outcome; the request-router skill selects locked pattern IDs and the relevant lib/shared/ui/feature/app skills. A genuinely new pattern returns to the exact blueprint owner.
 
-Start with [`START-HERE.md`](START-HERE.md). Preset authors should read the [`preset contract`](docs/presets/PRESET-CONTRACT.md) and the blueprint's [`preset authoring and instantiation guide`](docs/blueprint/reference-app-blueprint/10-preset-authoring-and-instantiation.md).
+Start with [`START-HERE.md`](START-HERE.md). Preset authors should read the [`preset contract`](docs/presets/PRESET-CONTRACT.md), [`skill-pack contract`](docs/presets/AI-GUIDE-CONTRACT.md), and blueprint guides [`10`](docs/blueprint/reference-app-blueprint/10-preset-authoring-and-instantiation.md) and [`11`](docs/blueprint/reference-app-blueprint/11-preset-agent-skills-and-design-evidence.md).
 
 ## Documentation quality checks
 
 ```bash
 PYTHONPATH=docs/blueprint python3 -m unittest discover -s docs/blueprint/scripts -p 'test_*.py'
 python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .
+python3 docs/blueprint/scripts/validate_presets.py docs/presets
 python3 docs/blueprint/scripts/score_readiness.py docs/blueprint/reference-app-blueprint/examples/basic-web-artifacts/readiness.json --json --expect not-ready
 ```
 

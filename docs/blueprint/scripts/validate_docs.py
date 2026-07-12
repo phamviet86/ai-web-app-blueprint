@@ -126,7 +126,7 @@ EFFECTIVE_ARTIFACT_REQUIRED_HEADINGS = {
         "Filesystem and materialization map",
         "Capability matrix",
         "Inter-layer contract matrix",
-        "AI guide routing",
+        "AI skill routing",
         "Clean-room verification",
     ),
 }
@@ -1205,6 +1205,7 @@ def validate_ci_contract(root: Path) -> list[Finding]:
         '"docs/presets/**"': "workflow path filters must include preset contracts and packages",
         "PYTHONPATH=docs/blueprint python3 -m unittest discover -s docs/blueprint/scripts -p 'test_*.py'": "workflow must run all script unit tests",
         "python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .": "workflow must run the canonical docs validator",
+        "python3 docs/blueprint/scripts/validate_presets.py docs/presets": "workflow must run the preset-package validator",
         "python3 docs/blueprint/scripts/score_readiness.py docs/blueprint/reference-app-blueprint/examples/basic-web-artifacts/readiness.json --json --expect not-ready": "workflow must pin the fail-closed reference assessment result",
     }
     for fragment, message in required_fragments.items():

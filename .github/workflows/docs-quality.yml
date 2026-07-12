@@ -39,5 +39,7 @@ jobs:
         run: PYTHONPATH=docs/blueprint python3 -m unittest discover -s docs/blueprint/scripts -p 'test_*.py'
       - name: Validate the documentation package
         run: python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .
+      - name: Validate preset packages
+        run: python3 docs/blueprint/scripts/validate_presets.py docs/presets
       - name: Validate the fail-closed reference assessment
         run: python3 docs/blueprint/scripts/score_readiness.py docs/blueprint/reference-app-blueprint/examples/basic-web-artifacts/readiness.json --json --expect not-ready

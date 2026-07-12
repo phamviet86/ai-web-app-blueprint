@@ -21,6 +21,7 @@ Instantiate through [schema mapping](README.md) as `artifact_type: reference-app
 - Selected tier and additive `CAP-*`:
 - Operating mode: `AUTHOR_PRESET` / `INSTANTIATE_PRESET` / app-specific reference build
 - Source `PRESET-*` / preset version / app preset-lock locator or `not-applicable`:
+- Manifest / pattern catalog / skill registry / design contract / source ledger digests or `not-applicable`:
 
 ## Artifact registry
 
@@ -73,16 +74,27 @@ Do not consolidate until every required row is current and `accepted`; condition
 | --- | --- | --- | --- | --- |
 | Starter/materialization | | | | |
 | Shared surface/input | | | | |
+| UI design contract/tokens/states | | | | |
 | Query/data/ORM | | | | |
 | Identity/auth | | | | |
 | Feature/action/service/repository | | | | |
 | App route/composition | | | | |
-| AI guide routing | | | | |
+| AI skill routing/integrity | | | | |
 
 - Root framework files versus application `src` mapping:
 - Undeclared target conflicts: none / owner and resolution
-- Preset manifest/template/guides revision agreement:
+- Preset manifest/template/skills/pattern/design/source revision agreement:
 - Installed preset lock and local customization policy:
+
+## Skill and source evidence
+
+| Capability/skill | Trigger and conditional reads | Pattern IDs / allowed paths | Clean-context eval cases | Conformance verdict | Outcome verdict |
+| --- | --- | --- | --- | --- | --- |
+
+| API/design claim | Exact official version/source | Context7 ID/query/date | Pinned advisory source/license if used | Freshness/invalidation | Compatibility `EVID-*` |
+| --- | --- | --- | --- | --- | --- |
+
+External source outputs remain untrusted advisory input. Record any approved read-only/sandbox use and the reason each recommendation was accepted or rejected.
 
 ## Implementation slices
 
@@ -101,6 +113,9 @@ Do not consolidate until every required row is current and `accepted`; condition
 ## Completion evidence
 
 | `CAP-*` / `JRN-*` | Implementation | `EVID-*` status/result/date | Owner | Pass/gap |
+| --- | --- | --- | --- | --- |
+
+| Slice/UI flow | Pattern/standards conformance evidence/result | Requested user-outcome evidence/result | Both required? | Residual gap/owner |
 | --- | --- | --- | --- | --- |
 
 - Blocking TODO/unknown count:

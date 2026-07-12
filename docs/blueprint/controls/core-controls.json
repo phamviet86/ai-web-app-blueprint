@@ -1,0 +1,359 @@
+{
+  "catalog_version": "1.0.0",
+  "dimensions": [
+    { "id": 1, "name": "Drivers, topology, and module architecture" },
+    { "id": 2, "name": "Public contracts and synchronous flows" },
+    { "id": 3, "name": "Security, identity, and privacy" },
+    { "id": 4, "name": "Data lifecycle, migration, and recovery" },
+    { "id": 5, "name": "Reliability and external consistency" },
+    { "id": 6, "name": "Runtime, UX, accessibility, and performance" },
+    { "id": 7, "name": "Testing and architecture fitness" },
+    { "id": 8, "name": "Developer experience and delivery supply chain" },
+    { "id": 9, "name": "Observability and operations" },
+    { "id": 10, "name": "Evolution, governance, and AI usability" }
+  ],
+  "controls": [
+    {
+      "id": "CTL-ARCH-DRIVERS-01",
+      "dimension": 1,
+      "text": "System drivers, risks, and measurable quality attributes govern architecture choices.",
+      "source_rule": "ARCH-SYSTEM-01",
+      "baseline": true,
+      "critical_when": "An unknown driver can change topology, trust, recovery, or a critical-journey target."
+    },
+    {
+      "id": "CTL-ARCH-TOPOLOGY-01",
+      "dimension": 1,
+      "text": "Repository and deployment topology are explicit, and every stronger boundary has evidence.",
+      "source_rule": "TOPOLOGY-GATE-01",
+      "baseline": true,
+      "critical_when": "A split changes failure isolation, data ownership, deployment, or on-call responsibility."
+    },
+    {
+      "id": "CTL-ARCH-MODULES-01",
+      "dimension": 1,
+      "text": "Modules align to business capabilities and expose stable public APIs.",
+      "source_rule": "MODULE-BOUNDARY-01",
+      "baseline": true,
+      "critical_when": "A module owns money, entitlement, regulated data, or a shared critical workflow."
+    },
+    {
+      "id": "CTL-ARCH-DEPENDENCY-01",
+      "dimension": 1,
+      "text": "Dependency direction, cycles, runtime separation, and public surfaces are mechanically checked.",
+      "source_rule": "DEP-DIRECTION-01",
+      "baseline": true,
+      "critical_when": "A violation can bypass a trust boundary or corrupt write ownership."
+    },
+    {
+      "id": "CTL-CONTRACT-OWNERSHIP-01",
+      "dimension": 2,
+      "text": "Commands, queries, DTOs, errors, transactions, and compatibility policies have owners.",
+      "source_rule": "MODULE-PUBLIC-01",
+      "baseline": true,
+      "critical_when": "The contract has external, cross-module, or independently deployed consumers."
+    },
+    {
+      "id": "CTL-CONTRACT-BOUNDARY-01",
+      "dimension": 2,
+      "text": "Cross-module flows use public contracts and preserve authoritative write ownership.",
+      "source_rule": "DEP-XMODULE-DATA-01",
+      "baseline": true,
+      "critical_when": "The flow crosses tenant, money, inventory, or irreversible-state boundaries."
+    },
+    {
+      "id": "CTL-CONTRACT-SHAPES-01",
+      "dimension": 2,
+      "text": "Transport, application, domain, and adapter shapes are translated deliberately.",
+      "source_rule": "MODULE-ADAPTER-01",
+      "baseline": true,
+      "critical_when": "An external or storage shape can leak privileged fields or volatile semantics."
+    },
+    {
+      "id": "CTL-CONTRACT-COMPOSITION-01",
+      "dimension": 2,
+      "text": "Composition roots wire concrete adapters outside business policy.",
+      "source_rule": "COMPOSITION-ROOT-01",
+      "baseline": true,
+      "critical_when": "Hidden runtime lookup could select a privileged or production dependency."
+    },
+    {
+      "id": "CTL-SEC-THREAT-01",
+      "dimension": 3,
+      "text": "Material trust boundaries have a current threat and abuse model.",
+      "source_rule": "SEC-RISK-01",
+      "baseline": true,
+      "critical_when": "The system is internet-facing, privileged, multi-tenant, regulated, or handles sensitive assets."
+    },
+    {
+      "id": "CTL-SEC-AUTHZ-01",
+      "dimension": 3,
+      "text": "Authentication, session lifecycle, and default-deny resource authorization are server enforced.",
+      "source_rule": "AUTHZ-DEFAULT-DENY-01",
+      "baseline": false,
+      "critical_when": "Any non-public resource or action is callable."
+    },
+    {
+      "id": "CTL-SEC-LIFECYCLE-01",
+      "dimension": 3,
+      "text": "Identity, session, secret, and personal-data lifecycles have owners and end states.",
+      "source_rule": "IDENTITY-LIFECYCLE-01",
+      "baseline": true,
+      "critical_when": "Credentials, personal data, privileged identity, or recovery paths exist."
+    },
+    {
+      "id": "CTL-SEC-NEGATIVE-01",
+      "dimension": 3,
+      "text": "Negative tests prove horizontal, vertical, tenant, and sensitive-data denial paths.",
+      "source_rule": "TENANT-ISOLATION-01",
+      "baseline": false,
+      "critical_when": "Ownership, roles, support access, or tenancy affects authorization."
+    },
+    {
+      "id": "CTL-DATA-INVENTORY-01",
+      "dimension": 4,
+      "text": "Authoritative and sensitive data copies have classification, ownership, retention, and deletion rules.",
+      "source_rule": "DATA-INVENTORY-01",
+      "baseline": true,
+      "critical_when": "Data is sensitive, regulated, business-critical, or copied to vendors/backups."
+    },
+    {
+      "id": "CTL-DATA-MIGRATION-01",
+      "dimension": 4,
+      "text": "Schema and data changes use compatible phases and resumable observable backfills.",
+      "source_rule": "MIGRATION-COMPAT-01",
+      "baseline": false,
+      "critical_when": "Existing durable data or mixed application versions are affected."
+    },
+    {
+      "id": "CTL-DATA-INTEGRITY-01",
+      "dimension": 4,
+      "text": "Integrity, environment/tenant isolation, query ownership, and migration order are explicit.",
+      "source_rule": "DATA-ISOLATION-01",
+      "baseline": true,
+      "critical_when": "Wrong-scope access or write order can corrupt or disclose data."
+    },
+    {
+      "id": "CTL-DATA-RECOVERY-01",
+      "dimension": 4,
+      "text": "Restore drills prove declared RPO and RTO across authoritative stores.",
+      "source_rule": "RECOVERY-DRILL-01",
+      "baseline": false,
+      "critical_when": "Durable state cannot be reconstructed safely from another authority."
+    },
+    {
+      "id": "CTL-REL-OPERATION-01",
+      "dimension": 5,
+      "text": "Remote and concurrent operations have deadlines, cancellation, retry, idempotency, and invariant protection.",
+      "source_rule": "DEADLINE-CANCEL-01",
+      "baseline": true,
+      "critical_when": "A timeout, duplicate, or concurrent call can create an irreversible effect."
+    },
+    {
+      "id": "CTL-REL-ASYNC-01",
+      "dimension": 5,
+      "text": "Durable asynchronous work has identity, state, duplicate handling, and recovery semantics.",
+      "source_rule": "ASYNC-STATE-01",
+      "baseline": false,
+      "critical_when": "A queue, scheduler, event, worker, or resumable job is selected."
+    },
+    {
+      "id": "CTL-REL-INTEGRATION-01",
+      "dimension": 5,
+      "text": "Vendor and webhook protocols separate authenticity, delivery state, policy, and reconciliation.",
+      "source_rule": "VENDOR-WEBHOOK-01",
+      "baseline": false,
+      "critical_when": "An external provider can cause or confirm a business effect."
+    },
+    {
+      "id": "CTL-REL-RECOVERY-01",
+      "dimension": 5,
+      "text": "Ordering, quarantine, replay, partial failure, and degraded modes have observable recovery paths.",
+      "source_rule": "ORDER-DLQ-REPLAY-01",
+      "baseline": false,
+      "critical_when": "Lost, reordered, or replayed work can violate a critical journey."
+    },
+    {
+      "id": "CTL-UX-RUNTIME-01",
+      "dimension": 6,
+      "text": "Server, browser, streaming, synchronous, and asynchronous paths are selected deliberately.",
+      "source_rule": "RUNTIME-PATH-01",
+      "baseline": true,
+      "critical_when": "Runtime choice changes trust, secrets, latency, or connection behavior."
+    },
+    {
+      "id": "CTL-UX-NATIVE-01",
+      "dimension": 6,
+      "text": "Native platform capability precedes wrappers and preserves semantic accessibility.",
+      "source_rule": "NATIVE-FIRST-01",
+      "baseline": true,
+      "critical_when": "A wrapper changes input, focus, keyboard, error, or upgrade behavior."
+    },
+    {
+      "id": "CTL-UX-BUDGET-01",
+      "dimension": 6,
+      "text": "Critical journeys have representative accessibility and performance budgets.",
+      "source_rule": "PERF-BUDGET-01",
+      "baseline": true,
+      "critical_when": "The journey has a contractual accessibility or latency target."
+    },
+    {
+      "id": "CTL-UX-CAPACITY-01",
+      "dimension": 6,
+      "text": "Capacity, saturation, cold start, query, bundle, and cost claims use representative evidence.",
+      "source_rule": "PERF-CAPACITY-01",
+      "baseline": true,
+      "critical_when": "Traffic, cardinality, quotas, or cost can exhaust a shared resource."
+    },
+    {
+      "id": "CTL-TEST-RISK-01",
+      "dimension": 7,
+      "text": "Test types map to failure modes at the lowest sufficient evidence layer.",
+      "source_rule": "TEST-PORTFOLIO-01",
+      "baseline": true,
+      "critical_when": "A material failure mode has no cheaper deterministic proof."
+    },
+    {
+      "id": "CTL-TEST-LAYERS-01",
+      "dimension": 7,
+      "text": "Domain, application, repository, contract, UI, async, migration, and nonfunctional risks have owners.",
+      "source_rule": "TEST-SEAM-01",
+      "baseline": true,
+      "critical_when": "A substitute cannot reproduce the contract being claimed."
+    },
+    {
+      "id": "CTL-TEST-DATA-01",
+      "dimension": 7,
+      "text": "Test data is isolated, valid, non-sensitive, and deterministic for time, IDs, locale, and concurrency.",
+      "source_rule": "TEST-DATA-01",
+      "baseline": true,
+      "critical_when": "A test can touch shared, sensitive, or production-like durable state."
+    },
+    {
+      "id": "CTL-TEST-FITNESS-01",
+      "dimension": 7,
+      "text": "Architecture invariants and brownfield baselines are automated and ratcheted.",
+      "source_rule": "FITNESS-REGISTRY-01",
+      "baseline": true,
+      "critical_when": "A cheap mechanical violation can bypass a critical boundary."
+    },
+    {
+      "id": "CTL-DELIVERY-ONBOARD-01",
+      "dimension": 8,
+      "text": "Clone-to-running, check, build, reset, and evidence discovery are reproducible.",
+      "source_rule": "DEVEX-ONBOARD-01",
+      "baseline": true,
+      "critical_when": "Only one person or ambient machine state can reproduce the release."
+    },
+    {
+      "id": "CTL-DELIVERY-CI-01",
+      "dimension": 8,
+      "text": "CI treats untrusted contributions safely and enforces deterministic gates.",
+      "source_rule": "CI-TRUST-01",
+      "baseline": true,
+      "critical_when": "CI can access secrets, artifacts, infrastructure, or deploy authority."
+    },
+    {
+      "id": "CTL-DELIVERY-ARTIFACT-01",
+      "dimension": 8,
+      "text": "Reviewed artifacts are immutable or reproducibly rebuilt with distinct provenance.",
+      "source_rule": "ARTIFACT-PROMOTION-01",
+      "baseline": true,
+      "critical_when": "A release reaches production or a regulated/customer-controlled environment."
+    },
+    {
+      "id": "CTL-DELIVERY-RELEASE-01",
+      "dimension": 8,
+      "text": "Deploy, migration, rollout, rollback/roll-forward, and compatibility windows are rehearsable.",
+      "source_rule": "RELEASE-COMPAT-01",
+      "baseline": true,
+      "critical_when": "Old and new application, data, event, or worker versions coexist."
+    },
+    {
+      "id": "CTL-OPS-TELEMETRY-01",
+      "dimension": 9,
+      "text": "Logs, metrics, and traces correlate critical request and workflow paths safely.",
+      "source_rule": "OBS-CORRELATION-01",
+      "baseline": true,
+      "critical_when": "A critical failure cannot be diagnosed from one correlated path."
+    },
+    {
+      "id": "CTL-OPS-SLO-01",
+      "dimension": 9,
+      "text": "Critical capabilities have owned SLIs, SLOs, alerts, health semantics, and runbooks.",
+      "source_rule": "SLO-OPERATIONS-01",
+      "baseline": true,
+      "critical_when": "Availability, latency, or recovery is a declared system baseline."
+    },
+    {
+      "id": "CTL-OPS-INCIDENT-01",
+      "dimension": 9,
+      "text": "Incident detection, communication, mitigation, recovery, and follow-up are exercised.",
+      "source_rule": "INCIDENT-RECOVERY-01",
+      "baseline": true,
+      "critical_when": "Failure can materially affect users, security, data, or contractual service."
+    },
+    {
+      "id": "CTL-OPS-GOVERNANCE-01",
+      "dimension": 9,
+      "text": "Telemetry cardinality, sampling, retention, access, privacy, drop behavior, and cost are governed.",
+      "source_rule": "OBS-GOVERNANCE-01",
+      "baseline": true,
+      "critical_when": "Telemetry can leak sensitive data or exhaust production resources/budget."
+    },
+    {
+      "id": "CTL-GOV-DECISION-01",
+      "dimension": 10,
+      "text": "Costly decisions and bounded exceptions have owners, evidence, expiry, and revisit triggers.",
+      "source_rule": "ADR-DECISION-01",
+      "baseline": true,
+      "critical_when": "A decision is costly to reverse or accepts material residual risk."
+    },
+    {
+      "id": "CTL-GOV-CONTRACT-01",
+      "dimension": 10,
+      "text": "Public contracts have compatibility, deprecation, consumer migration, and decommission paths.",
+      "source_rule": "CONTRACT-DEPRECATION-01",
+      "baseline": true,
+      "critical_when": "A consumer cannot be upgraded atomically or usage cannot be observed."
+    },
+    {
+      "id": "CTL-GOV-REFACTOR-01",
+      "dimension": 10,
+      "text": "Refactors characterize behavior and migrate through an explicit measurable seam.",
+      "source_rule": "MIGRATION-SEAM-01",
+      "baseline": false,
+      "critical_when": "Current behavior or data cannot change silently."
+    },
+    {
+      "id": "CTL-GOV-GUIDANCE-01",
+      "dimension": 10,
+      "text": "Repo guidance routes humans and agents to minimal current owners and verified evidence.",
+      "source_rule": "AI-CONTEXT-01",
+      "baseline": true,
+      "critical_when": "Stale or conflicting guidance can authorize a high-risk implementation."
+    }
+  ],
+  "gates": [
+    {
+      "id": "GATE-GREENFIELD-01",
+      "name": "Greenfield walking skeleton",
+      "source": "08-scorecard-and-readiness-gates.md#greenfield-walking-skeleton-gate"
+    },
+    {
+      "id": "GATE-EVOLUTION-01",
+      "name": "Feature or architecture evolution",
+      "source": "08-scorecard-and-readiness-gates.md#featureevolution-gate"
+    },
+    {
+      "id": "GATE-REFACTOR-01",
+      "name": "Refactor and cutover",
+      "source": "08-scorecard-and-readiness-gates.md#refactorcutover-gate"
+    },
+    {
+      "id": "GATE-RELEASE-01",
+      "name": "Production release",
+      "source": "08-scorecard-and-readiness-gates.md#production-release-gate"
+    }
+  ]
+}

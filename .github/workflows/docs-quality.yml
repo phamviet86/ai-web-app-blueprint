@@ -1,0 +1,43 @@
+name: docs-quality
+
+on:
+  pull_request:
+    paths:
+      - "**/*.md"
+      - "docs/blueprint/scripts/**"
+      - "docs/blueprint/controls/**"
+      - "docs/blueprint/reference-app-blueprint/**/*.json"
+      - "docs/presets/**"
+      - "docs/governance/**"
+      - ".github/workflows/docs-quality.yml"
+  push:
+    branches: [main]
+    paths:
+      - "**/*.md"
+      - "docs/blueprint/scripts/**"
+      - "docs/blueprint/controls/**"
+      - "docs/blueprint/reference-app-blueprint/**/*.json"
+      - "docs/presets/**"
+      - "docs/governance/**"
+      - ".github/workflows/docs-quality.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      - name: Unit-test the validator
+        run: PYTHONPATH=docs/blueprint python3 -m unittest discover -s docs/blueprint/scripts -p 'test_*.py'
+      - name: Validate the documentation package
+        run: python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .
+      - name: Validate the fail-closed reference assessment
+        run: python3 docs/blueprint/scripts/score_readiness.py docs/blueprint/reference-app-blueprint/examples/basic-web-artifacts/readiness.json --json --expect not-ready

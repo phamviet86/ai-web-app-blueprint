@@ -1,6 +1,6 @@
 ---
 template_id: SKEL-TPL-SLO-RUNBOOK
-template_version: 1.0.0
+template_version: 1.1.0
 produces: slo-runbook
 owner_guide: ../15-delivery-observability-and-operations.md
 use_when: A critical journey/service needs an SLO, alert, or operational response.
@@ -31,6 +31,14 @@ use_when: A critical journey/service needs an SLO, alert, or operational respons
 - Volume, drop/backpressure, and cost budget:
 - Deploy/config/flag/migration markers:
 
+## Diagnostic and action authority
+
+| Step | Data mode: `NONE` / `LIVE_READ` / `TEST_MUTATION` / `PRODUCTION_HANDOFF` | Allowed interface / target | External side effect: none / isolated simulation / operator action | Guard / approval | Success observation / postcheck / recovery / owner |
+| --- | --- | --- | --- | --- | --- |
+
+- No-fallback rule for live diagnostics:
+- Operator boundary for production data change and for real publish/release/deploy (tracked separately):
+
 ## Alerts
 
 | Alert | User impact | Threshold/window | Owner | Dashboard/log/trace link |
@@ -51,5 +59,5 @@ use_when: A critical journey/service needs an SLO, alert, or operational respons
 
 ## Last exercised evidence
 
-| Exercised at | SLI query/result checked | Alert route/on-call receipt | Runbook/kill-switch action | Outcome | Follow-up owner/due date |
+| Exercised at | SLI/dashboard result checked | Alert route/on-call receipt | Runbook action + authority/stop path | Outcome/postcheck | Follow-up owner/due date |
 | --- | --- | --- | --- | --- | --- |

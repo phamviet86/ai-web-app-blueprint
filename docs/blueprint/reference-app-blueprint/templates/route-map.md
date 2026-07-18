@@ -1,6 +1,6 @@
 ---
 template_id: REFAPP-TPL-ROUTE-MAP
-template_version: 1.0.0
+template_version: 1.1.0
 produces: route-map
 owner_guide: ../07-app-routes-and-journeys.md
 use_when: Mapping logical routes, channels and critical journeys into the selected framework.
@@ -37,9 +37,18 @@ Include only selected browser routes and auth/webhook/file/health/worker/schedul
 
 For preset authoring, link each `verified` row to the exact walking slice. A framework route composes the feature contract; it does not recreate field aliases, columns, form schemas, authorization or repository policy.
 
+Canonical request and result mapping must preserve meaningful `false`, `null`, `0`, empty and omitted/default states across browser/server/feature boundaries; use real identifier and timezone-sensitive examples where applicable.
+
+## Surface state and action evidence
+
+| `ROUTE-*` / surface | Loading / empty / error / stale / denied / success | Focus / keyboard / announcements | Responsive viewports/input | Pending / rapid repeat / double-submit / result behavior | `EVID-*` status |
+| --- | --- | --- | --- | --- | --- |
+
+Denied is not empty, stale is not current, and client duplicate prevention does not replace server idempotency/concurrency. Evidence includes slow/failing reads and mutations, validation/conflict/ambiguous results, retry/recovery, focus restoration, and committed-success invalidation/navigation.
+
 ## Critical journeys
 
-| `JRN-*` | Persona/start | Route/command sequence | Data/event effects | Failure/degraded path | `EVID-*` status/layers |
+| `JRN-*` | Persona/start | Route/command sequence | Data/event effects | Failure/degraded/action-result path | `EVID-*` status/layers |
 | --- | --- | --- | --- | --- | --- |
 
 ## Navigation and capability visibility

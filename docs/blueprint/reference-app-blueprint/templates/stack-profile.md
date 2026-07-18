@@ -1,6 +1,6 @@
 ---
 template_id: REFAPP-TPL-STACK-PROFILE
-template_version: 1.0.0
+template_version: 1.1.0
 produces: stack-profile
 owner_guide: ../01-stack-intake-and-compatibility.md
 use_when: Selecting or validating the concrete stack before reference-app planning.
@@ -21,6 +21,15 @@ Instantiate through [schema mapping](README.md) as `artifact_type: stack-profile
 - Source mapping: maintained/candidate profile path or `CUSTOM`, authority/provenance, plus deviations:
 - Target: local showcase / public showcase / production starter
 
+## Application authority binding
+
+- Authority route at instantiation/adoption: `preset-lock` under the [preset contract](../../../presets/PRESET-CONTRACT.md) / `app-profile` under the [app-profile schema](../../schemas/app-profile.schema.json):
+- Locked blueprint / preset (when applicable) / source revisions and integrity digests:
+- Artifact registry and accepted system-profile IDs/digests; selected authority binds this stack-profile path/digest:
+- Pattern catalog / skill registry IDs, paths and digests:
+- Verification command registry path/digest under its [schema](../../schemas/verification-command-registry.schema.json):
+- Conflict, drift and authority-refresh owner/trigger:
+
 ## Acceptance gate
 
 - [ ] System/risk profile is current and blocking drivers are resolved.
@@ -31,6 +40,10 @@ Instantiate through [schema mapping](README.md) as `artifact_type: stack-profile
 - [ ] API claims link exact-version official sources; Context7 lookups record library ID, scope, source URL and retrieval date.
 - [ ] Third-party advisory inputs are commit-pinned, license-reviewed and excluded from ambient/global execution.
 - [ ] Every blocking spike passes.
+- [ ] The selected authority route, registries, revisions and digests agree; no second route claims a conflicting code shape.
+- [ ] Every selected vertical pattern has one primary owner, optional support skills and positive/negative evidence.
+- [ ] Required command lanes execute in clean-room evidence; existence-only checks do not count.
+- [ ] Data-access modes, mutation guards and production-handoff boundaries are explicit.
 
 Only then set status to `accepted`; an unresolved contradiction makes it `rejected`, otherwise use `draft` or `in-review`. An accepted artifact replaced by a newer accepted revision becomes `superseded`.
 
@@ -54,6 +67,13 @@ Only then set status to `accepted`; an unresolved contradiction makes it `reject
 | Testing/fitness | | | | | |
 | CI/deployment | | | | | |
 
+## Pattern and skill registry
+
+| Pattern ID | Outcome semantics | Primary owner skill | Support skills/controls | Current exemplar | Positive/negative verifier |
+| --- | --- | --- | --- | --- | --- |
+
+This registry contains established patterns only. An analyzer classifies each requested outcome at task time as `ESTABLISHED_PATTERN`, `PATTERN_EXTENSION`, or `CANDIDATE_GAP`; those classifications are not catalog status. Supporting layer work inherits the selected vertical pattern and never creates a second task owner.
+
 ## Executable topology
 
 | Root | Selected by `CAP-*` | Runtime/deploy unit | Dependencies | Startup/shutdown | Health/owner |
@@ -67,6 +87,27 @@ Only then set status to `accepted`; an unresolved contradiction makes it `reject
 
 | Capability | Local | Test | Preview/public demo | Production starter |
 | --- | --- | --- | --- | --- |
+
+## Verification command registry
+
+| Lane | Required / capability-selected | Declared argv/cwd | Environment / approval / side-effect boundary | Clean-room `EVID-*` / result |
+| --- | --- | --- | --- | --- |
+| `install` | Required | | | |
+| `doctor` | Required | | | |
+| `test` | Required | | | |
+| `check` | Required | | | |
+| `build` | Required | | | |
+| `start-smoke` | Required; positive timeout, readiness and bounded termination | | | |
+| `generate`, guarded `data-reset`, `auth-smoke`, `browser-smoke`, isolated `restore-drill` | Select when applicable; no external publish/release lane | | | |
+
+## Data-access policy
+
+| Mode | Allowed interface/target | Guard and negative proof | Stop condition / owner |
+| --- | --- | --- | --- |
+| `NONE` | No data access | No connection is opened | |
+| `LIVE_READ` | Approved least-privilege read-only interface | Read-only proof; no direct fallback | |
+| `TEST_MUTATION` | Disposable isolated target through guarded wrapper | In-process normalized target/live-collision check | |
+| `PRODUCTION_HANDOFF` | Operator-applied reviewed artifact | Pre/postchecks and recovery; no task mutation | |
 
 ## Compatibility decisions
 

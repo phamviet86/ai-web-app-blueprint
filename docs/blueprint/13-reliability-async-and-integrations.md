@@ -18,6 +18,7 @@ owns:
   - worker lifecycle, lease handoff, and partial-batch policy
   - scheduled-work overlap, misfire, and timezone semantics
   - event, outbox, inbox, ordering, and replay contracts
+  - external-effect claim, finalize, and ambiguous-result policy
   - vendor and webhook reliability
   - degraded-mode behavior
 ---
@@ -182,6 +183,18 @@ When a database write and vendor side effect cannot be atomic, use an explicit s
 
 Do not hold a database transaction open across remote network I/O merely to simulate atomicity.
 
+## Rule `EXTERNAL-EFFECT-01`: claim, perform, and finalize external effects explicitly
+
+When several workers or retries can issue the same non-transactional external mutation:
+
+1. atomically claim eligible intent in a short local transaction, recording stable intent identity, attempt/fencing token, owner/lease, and prior terminal state;
+2. commit the claim before external I/O, then call the dependency with a bounded deadline and provider idempotency key when supported;
+3. classify the result as confirmed success, confirmed rejection, or ambiguous because the effect may have committed;
+4. finalize in another short transaction only if the claim/fencing token is still current;
+5. reconcile ambiguous or stale claims through an authoritative status/read path, webhook/event, bounded expiry policy, or operator-visible workflow.
+
+Do not keep the claim transaction open across the network call. Do not automatically retry an ambiguous mutation unless an end-to-end idempotency contract proves the repeated request cannot duplicate the effect; a correlation ID alone is not that proof. Preserve ambiguous state instead of converting it to success, failure, or eligibility for ordinary retry.
+
 ## Rule `ORDER-DLQ-REPLAY-01`: ordering and replay are scoped operational contracts
 
 - Require ordering only per business key/partition that needs it; global ordering is exceptional.
@@ -237,6 +250,7 @@ An HTTP success acknowledges the documented acceptance stage; it must not claim 
 - [ ] Sync versus async choice records product state, cancellation, notification, ownership, and failure semantics.
 - [ ] Event envelope/schema compatibility and tenant/data classification rules are tested.
 - [ ] Outbox/inbox or equivalent failure-injection tests cover crash before/after publish and duplicate delivery.
+- [ ] External mutations prove atomic claim/fenced finalize, short transactions, crash recovery, and no automatic retry of ambiguous results.
 - [ ] Workers recover stale leases/checkpoints and expose bounded backlog/retry/dead-letter evidence.
 - [ ] Worker drain/death tests prove graceful shutdown, fenced handoff, durable acknowledgement, and correct partial-batch retry.
 - [ ] Scheduled work has tested timezone, occurrence identity, overlap, misfire/catch-up, and singleton ownership semantics where applicable.
@@ -246,4 +260,4 @@ An HTTP success acknowledges the documented acceptance stage; it must not claim 
 
 ## Stop conditions
 
-Stop and redesign when a remote call has no deadline, retries are infinite/multiplied or include permanent failures, a non-idempotent command is retried without deduplication, an invariant relies on read-check-write, async work has no durable identity/state/owner, worker shutdown can lose acknowledged work, lease handoff allows a stale commit, schedule overlap/misfire is undefined, exactly-once is claimed without end-to-end proof, DB state and external side effects have no reconciliation path, ordered delivery is assumed globally, failed work cannot be inspected/replayed safely, webhook acknowledgement can lose required work, or fallback behavior widens access or corrupts financial/security state.
+Stop and redesign when a remote call has no deadline, retries are infinite/multiplied or include permanent failures, a non-idempotent or ambiguous external mutation is automatically retried without end-to-end deduplication, an invariant relies on read-check-write, async work has no durable identity/state/owner, worker shutdown can lose acknowledged work, lease handoff allows a stale commit, schedule overlap/misfire is undefined, exactly-once is claimed without end-to-end proof, DB state and external side effects have no claim/finalize or reconciliation path, ordered delivery is assumed globally, failed work cannot be inspected/replayed safely, webhook acknowledgement can lose required work, or fallback behavior widens access or corrupts financial/security state.

@@ -44,10 +44,10 @@ docs/presets/<preset-id>/
 ├── guides/         namespaced SKILL.md packages and conditional resources
 ├── patterns/       catalog, exemplars, verifiers and positive/negative fixtures
 ├── design/         versioned UI contract and evidence index
-└── verification/   clean-room commands, fixtures and evidence locators
+└── verification/   command registry, clean-room fixtures and evidence locators
 ```
 
-The manifest maps every template source to its target path and declares whether installation creates, merges, or intentionally replaces it. Its skill registry maps stable capability keys to exact packages, while sibling records lock the pattern catalog, sources, design contract and verification evidence. Resolve all of these through `preset.json`; installation fails on a missing/digest-mismatched path or undeclared conflict and does not overwrite user work silently.
+The manifest maps every template source to its target path and declares whether installation creates, merges, or intentionally replaces it. Its skill registry maps stable capability keys to exact packages, while sibling records lock the pattern catalog, sources, design contract, verification command registry and evidence. Resolve all of these through `preset.json`; installation fails on a missing/digest-mismatched path or undeclared conflict and does not overwrite user work silently.
 
 For a Next.js preset created with the `src` option, application code belongs under `src/app`, `src/lib`, `src/shared`, and `src/features`. `package.json`, lockfile, Next/TypeScript/JavaScript/lint/style configuration, `public`, environment examples, migrations and test/tool configuration remain at their framework-default root paths.
 
@@ -58,7 +58,7 @@ For a Next.js preset created with the `src` option, application code belongs und
 3. Map every preset capability to the owning guides `03` through `07`; use `provided`, `verified`, `conditional`, or `unsupported` precisely.
 4. Build the smallest removable walking slices that exercise every `verified` flow.
 5. Build the required skill packages, pattern catalog and UI design/source evidence under guide [11](11-preset-agent-skills-and-design-evidence.md); map the analyzer capability from repository-level agent instructions through the manifest.
-6. Materialize the preset into an empty temporary repository and run its declared install, database, auth, lint/typecheck, test, build, browser, integrity and skill forward-evaluation checks as applicable.
+6. Materialize the preset into an empty temporary repository and execute the argv declared for the baseline command lanes `install`, `doctor`, `test`, `check`, `build`, and `start-smoke`, plus capability-selected database, auth, browser, integrity and skill forward-evaluation checks.
 7. Publish a new preset version only after code, manifest, skills, patterns, sources and evidence describe the same revision.
 
 The source stack profile and blueprint revision are immutable provenance for one preset version. A material compatibility change creates a new version and upgrade path.
@@ -105,6 +105,8 @@ Every web preset registers these namespaced skill packages under `guides/`; guid
 
 Each manifest row declares the namespaced skill name, exact package path, invocation metadata, supported agent targets and complete package tree digest. `SKILL.md` owns model-visible triggers, allowed paths and the minimal workflow; the pattern catalog owns pattern mappings and verifiers; conditional references and deterministic scripts remain package resources. The analyzer splits a cross-layer request in contract/dependency order and loads only the current owner skill.
 
+The seven rows above are mandatory. A preset may additionally register `audit-changes` and `publish` under those exact keys after their repository semantics are proven. Audit owns immutable range/coverage/checkpoint coordination and routes repairs to ordinary owners. Publish owns declared validation/topology/integration/final-revision checks and stops for its conflict authority path. Neither optional skill absorbs application policy. Every declared skill, including any other narrow extension, must have forward-evaluation coverage.
+
 `new-pattern` is not a bypass. It must search established preset and live-code patterns, prove that none fits, read the exact parent blueprint rule owner, start with the smallest local implementation, add an exemplar/verifier/positive and negative fixtures when reusable, update affected skills/catalog, and require an architecture decision when a consequential public or cross-layer contract changes.
 
 ## `INSTANTIATE_PRESET` workflow
@@ -123,12 +125,15 @@ Application code may evolve after installation. A blueprint or upstream preset u
 
 A preset can be accepted only when:
 
+- `verification.commands` is a digested file reference to a registry conforming to [`verification-command-registry.schema.json`](../schemas/verification-command-registry.schema.json), with structured argv for `install`, `doctor`, `test`, `check`, `build`, and `start-smoke`; `start-smoke` declares a positive timeout;
+- every command `cwd` is `.` or resolves inside the preset to an existing directory, and clean-room evidence binds each executed lane to the exact declared argv/cwd and proves every declared lane ran successfully, including capability-selected additions; `start-smoke` must explicitly observe both readiness and bounded termination, while file existence, exit zero alone, or a free-form command string is not execution evidence; exact `publish`, `release`, and `deploy` lane keys are forbidden, while a safe isolated check may use a separately named `*-simulate` lane;
 - its manifest, template, contract, skills and lock/provenance references agree;
 - its pattern catalog, design contract, source ledger, skill registry and integrity digests agree with the same revision;
+- each pattern declares one primary owner, unique support skills, exact verifier argv, intended negative failure codes/reasons, a non-circular semantic contract digest, and observed path/digest/execution evidence for every substantive verifier/fixture resource;
 - a clean repository can materialize it without undeclared overwrite;
 - every `verified` capability has current exact-version walking-slice evidence;
 - shared/data/auth/feature/app boundaries have mechanical fitness checks;
-- every required skill passes clean-context forward evaluation for pattern conformance and requested outcome separately;
+- every declared skill passes clean-context forward evaluation for pattern conformance and requested outcome separately, with both axes bound to the canonical case-input digest; optional audit/publish skills also pass digest-locked range/checkpoint or topology/conflict/final-revision adversarial inputs with matching expected/observed dispositions and failure codes;
 - demo identity, data and side effects are deterministic, isolated and removable;
 - install, update, rollback/removal limitations and unsupported capabilities are explicit.
 

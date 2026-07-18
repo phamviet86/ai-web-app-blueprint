@@ -3,7 +3,7 @@ guide_id: SKEL-ROUTER
 title: Production Repository Blueprint Adoption Router
 status: experimental
 audience: human-and-ai
-package_version: 0.11.0
+package_version: 0.12.0
 control_catalog_version: 1.0.0
 artifact_schema_version: "1.0"
 purpose: Route humans and AI agents through a stack-neutral production blueprint with optional implementation profiles.
@@ -41,11 +41,12 @@ The core is stack-neutral. A file under `profiles/` maps core roles to a concret
 
 | Contract | Current declaration |
 | --- | --- |
-| Package version/maturity | `0.11.0` / `experimental` |
+| Package version/maturity | `0.12.0` / `experimental` |
 | Control catalog | `1.0.0` in guide `08` |
 | Artifact schema | `1.0` in [templates/README.md](templates/README.md) |
 | Structural validation | `python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .` |
 | Preset-package validation | `python3 docs/blueprint/scripts/validate_presets.py docs/presets` |
+| Existing/custom app validation | `python3 docs/blueprint/scripts/validate_app_profile.py PATH --repo-root ROOT --expected-revision <current-source-revision> --expected-blueprint-revision <selected-blueprint-revision>` |
 | Graduation policy/history | [MATURITY.md](MATURITY.md) / [CHANGELOG.md](CHANGELOG.md) |
 
 The package is suitable for evaluation and governed pilots with human review. It has not yet established the multi-pilot evidence required for `stable`. A passing docs validator establishes structural conformance only; it does not make this package, a reference app, or an adopting implementation production-ready.
@@ -66,7 +67,7 @@ For a greenfield repo:
 4. selected stack profile and primary version-aware documentation;
 5. implementation evidence.
 
-For an existing repo, preserve observable behavior and data safety unless change is authorized. Use current code to discover contracts; do not copy its debt into the target. Repo-local canonical instructions remain authoritative until the blueprint is explicitly adopted for that concern.
+For an existing repo, preserve observable behavior and data safety unless change is authorized. Use current code to discover contracts; do not copy its debt into the target. Repo-local canonical instructions remain authoritative until the blueprint is explicitly adopted for that concern. After adoption, app work resolves exactly one concrete authority: a verified preset lock, or a validated app profile that binds accepted repo-local artifacts, patterns, skills, commands, clean-room execution evidence, dual-verdict evaluations, revisions, and digests.
 
 ## Semantic labels
 
@@ -181,6 +182,7 @@ Read required guides in order. Add at most the owner of the next unresolved conc
 | Plan or build a stack-selected reference application | Companion `reference-app-blueprint` router | Load core owners only as that router requests |
 | Author, verify, or instantiate a reusable preset | Companion `reference-app-blueprint` guide `10` | Preset catalog contract; load core owners only for unresolved contracts |
 | Author preset skills or UI/design evidence | Companion `reference-app-blueprint` guide `11` | 07 for portable skill/source rules; 01 or 04 for stack/design owners |
+| Govern an existing/custom application without preset provenance | README, 06, 07, 14 | Accepted system/stack artifacts, app-profile schema, repo-local command registry, and dual-verdict skill evaluations |
 
 Do not combine every optional concern into one context. Context cost is cumulative: finish design with a decision artifact, then start implementation from `17` + the selected profile + exactly one flow owner instead of retaining all design guides. Split architecture, safety, implementation, and release into coherent workstreams.
 
@@ -216,13 +218,15 @@ Mode additions:
 - Architecture controls should become lint/tests/pipeline gates where mechanically enforceable.
 - Transition mechanisms must have owner, success metric, expiry, and deletion trigger.
 - Governance artifact instances use schema `1.0`, stable IDs, controlled status transitions, and the artifact registry.
+- Application source uses one validated authority path at a time. A preset lock proves reusable materialization provenance; an app profile proves only the named existing repository's accepted local authority and evidence.
 - Package releases follow `MATURITY.md` and cannot promote their own maturity without named graduation evidence.
 - `python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .` is the local/CI structural gate from the repository root; semantic and runtime claims still require review/evidence.
 - `python3 docs/blueprint/scripts/validate_presets.py docs/presets` additionally fails closed on any future preset manifest, skill, pattern, source, or evaluation package; an empty catalog remains valid.
+- `python3 docs/blueprint/scripts/validate_app_profile.py PATH --repo-root ROOT --expected-revision <current-source-revision> --expected-blueprint-revision <selected-blueprint-revision>` fails closed on stale or contradictory authority references for an adopting existing/custom app; it does not make that app a reusable preset.
 
 ## Evidence basis
 
-The quality model is informed by current primary sources including [OWASP ASVS 5.0](https://owasp.org/www-project-application-security-verification-standard/), [NIST SSDF 1.1](https://csrc.nist.gov/projects/ssdf), [WCAG 2.2](https://www.w3.org/TR/WCAG22/), [SLSA 1.2](https://slsa.dev/spec/v1.2/), [OpenTelemetry](https://opentelemetry.io/docs/concepts/signals/), and official framework/library documentation. These sources define verification baselines, not a universal enterprise ceremony; the system profile selects proportionate controls.
+The quality model is informed by current primary sources including [OWASP ASVS 5.0](https://owasp.org/www-project-application-security-verification-standard/), [NIST SSDF 1.1](https://csrc.nist.gov/projects/ssdf), [WCAG 2.2](https://www.w3.org/TR/WCAG22/), [SLSA 1.2](https://slsa.dev/spec/v1.2/), [OpenTelemetry](https://opentelemetry.io/docs/concepts/signals/), and official framework/library documentation. The revision-bound [Bingo LMS lesson record](evidence/bingo-lms-repository-lessons.md) supplies one real-app repository friction source for portable rules, not stack authority or readiness proof. These sources define verification baselines, not a universal enterprise ceremony; the system profile selects proportionate controls.
 
 ## When not to use this package
 

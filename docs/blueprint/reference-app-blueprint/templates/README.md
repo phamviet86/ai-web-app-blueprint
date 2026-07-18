@@ -23,14 +23,14 @@ owns:
 
 | Template ID | Version | Produces / `artifact_type` | Effective status |
 | --- | --- | --- | --- |
-| `REFAPP-TPL-PRESET-CONTRACT` | `1.0.0` | `preset-contract` | `accepted` |
-| `REFAPP-TPL-STACK-PROFILE` | `1.0.0` | `stack-profile` | `accepted` |
+| `REFAPP-TPL-PRESET-CONTRACT` | `1.1.0` | `preset-contract` | `accepted` |
+| `REFAPP-TPL-STACK-PROFILE` | `1.1.0` | `stack-profile` | `accepted` |
 | `REFAPP-TPL-CAPABILITY-COVERAGE` | `1.0.0` | `capability-coverage` | `accepted` |
 | `REFAPP-TPL-DATA-MODEL` | `1.0.0` | `data-model` | `accepted` |
 | `REFAPP-TPL-SHARED-PLAN` | `1.0.0` | `shared-plan` | `accepted` |
 | `REFAPP-TPL-PLATFORM-PLAN` | `1.0.0` | `platform-plan` | `accepted` |
 | `REFAPP-TPL-FEATURE-PLAN` | `1.0.0` | `feature-plan` | `accepted` |
-| `REFAPP-TPL-ROUTE-MAP` | `1.0.0` | `route-map` | `accepted` |
+| `REFAPP-TPL-ROUTE-MAP` | `1.1.0` | `route-map` | `accepted` |
 | `REFAPP-TPL-REFERENCE-APP-PLAN` | `1.0.0` | `reference-app-plan` | `accepted` |
 
 ## Instantiate a template
@@ -49,7 +49,7 @@ created_at: 2026-07-12
 updated_at: 2026-07-12
 scope:
   - system:example
-source_template: REFAPP-TPL-STACK-PROFILE@1.0.0
+source_template: REFAPP-TPL-STACK-PROFILE@1.1.0
 supersedes: []
 superseded_by: null
 review_by: 2026-10-12

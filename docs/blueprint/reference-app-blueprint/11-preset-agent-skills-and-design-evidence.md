@@ -26,7 +26,7 @@ owns:
 
 ## Rule `REF-PRESET-SKILL-PACKAGE-01`: ship real, manifest-routed skill packages
 
-Every web preset registers these capabilities in `preset.json`: `analyze-request`, `lib`, `shared`, `feature`, `app`, `new-pattern`, and `ui`. Each registry row names a namespaced skill, relative package path, invocation metadata, supported agent targets and complete package tree digest. The skill owns its workflow and allowed paths; the pattern catalog owns pattern mappings and verifiers. Resolve both through the manifest; do not infer either from a conventional filename.
+Every web preset registers these seven capabilities in `preset.json`: `analyze-request`, `lib`, `shared`, `feature`, `app`, `new-pattern`, and `ui`. A preset with a proven repository workflow may additionally register `audit-changes` and `publish` under those exact capability keys, or another narrow optional skill under a lowercase kebab-case key. Each registry row names a namespaced skill, relative package path, invocation metadata, supported agent targets and complete package tree digest. Every declared skill, including optional ones, is digest-locked and forward-evaluated. The skill owns its workflow and allowed paths; the pattern catalog owns pattern mappings and verifiers. Resolve both through the manifest; do not infer either from a conventional filename.
 
 ```text
 guides/<preset-id>-<capability>/
@@ -39,7 +39,11 @@ guides/<preset-id>-<capability>/
 
 `SKILL.md` frontmatter contains exactly `name` and `description`; the name, folder and manifest name agree. Do not add a skill README or duplicate the preset contract inside every skill. Namespace prevents unrelated presets from colliding when an application exposes its locked skills to an agent.
 
-The analyzer is the single outcome-level router. It returns the requested behavior, matched pattern or proved gap, ordered capability/skill sequence, public-contract deltas, prerequisites, verification and only decisions that require the user. It does not implement every layer itself.
+The analyzer is the single outcome-level router. It returns the requested behavior, selected vertical pattern, evidence tier, ordered capability/skill sequence, public-contract deltas, prerequisites, verification and only decisions that require the user. It does not implement every layer itself.
+
+Assign exactly one tier per coherent outcome: `ESTABLISHED_PATTERN` when the locked record, live exemplar, failure behavior, and verifier already cover it; `PATTERN_EXTENSION` when that same pattern still owns the semantics but a changed contract/API seam lacks evidence; or `CANDIDATE_GAP` only after all nearby patterns fail their declared use/avoid contract. Framework novelty, a new file, or a support-layer change does not create a gap.
+
+Build tasks in contract/dependency order. Every task has exactly one owning skill and records one pattern role. The semantic owner is `primary`; lib, shared, UI, and app tasks that enable the same flow are `support` and inherit its vertical pattern. Tool/API skills remain support resources rather than second task owners. If a skill discovers another owner's prerequisite, it returns `TASK_REROUTED`; the analyzer updates the graph and continues. A safe reroute is not an outcome-level stop and never substitutes for either final verdict.
 
 ## Rule `REF-PRESET-SKILL-TRIGGER-01`: make invocation and disclosure predictable
 
@@ -77,11 +81,15 @@ Each step ends with an observable criterion. Completion covers every affected pu
 Every implementation skill performs this loop:
 
 1. Read the app preset lock, resolve the exact skill and pattern catalog through `preset.json`, and verify their digests.
-2. Inspect the selected exemplar, verifier and nearby live consumers; choose a pattern by semantics rather than filename similarity.
+2. Inspect the selected substantive exemplar file/tree, verifier, exact catalog `verifier_argv`, expected negative failure codes/reasons, and nearby live consumers; empty, comment-only, symlink-only, or `.gitkeep`-only exemplars do not qualify. Choose a pattern by semantics rather than filename similarity.
 3. State the allowed paths, public input/result changes, dependency order and verification before editing.
 4. Implement the smallest closed flow, keeping framework, feature, shared and app ownership intact.
 5. Run focused behavior plus architecture/contract checks and the pattern's positive and negative fixtures.
 6. Update the pattern catalog, skill or ADR only when the contract became reusable or consequential; keep one-off behavior feature-local.
+
+Before implementation, pass a task envelope containing the observable outcome, single owner, support skills, vertical pattern and `primary`/`support` role, evidence tier, unresolved evidence trigger, exactly one data-access mode (`NONE`, `LIVE_READ`, `TEST_MUTATION`, or `PRODUCTION_HANDOFF`), allowed paths, public-contract delta, prerequisites, focused proof, completion criteria, and stop conditions. Record `NONE` even for ordinary code tasks, and create a new task envelope before changing mode. Do not create tasks per file or assign separate patterns to support layers.
+
+The catalog expresses that same ownership with exactly one declared `primary_owner` and unique declared `support_skills`; descriptive `layer` does not create another owner. Candidate/verified pattern proof binds `pattern_contract_sha256` over the complete entry except its evidence refs, using domain `preset-pattern-contract-v1` plus NUL and compact key-sorted UTF-8 JSON. Its execution map records run provenance/time, exact verifier path/digest/argv/zero exit, and the exact positive/negative fixture path/digest set. Positive fixtures are observed accepted. Negative fixtures are observed rejected with the same expected code/reason declared by the catalog. Missing/extra resources, comment-only resources, different argv/interpreter, semantic contract drift, or rejection for another reason cannot qualify. The validator verifies these records without executing preset code.
 
 `new-pattern` first proves that the locked catalog and live code have no compatible pattern. It reads only the exact blueprint owner, compares alternatives when the public seam is consequential, builds one local closed flow, and promotes a catalog entry only with exemplar, verifier and positive/negative fixtures.
 
@@ -117,9 +125,9 @@ WCAG requirements, user safety, product constraints and measured usability outra
 
 ## Rule `REF-PRESET-SKILL-EVAL-01`: forward-test behavior in clean context
 
-Before a preset reaches `candidate`, test each skill as a future agent will receive it. Give a fresh agent the actual skill package, manifest-resolved raw repository artifacts and a realistic user task; do not reveal the expected patch, suspected failure or author conclusions.
+Every recorded case at every maturity status has the full prompt, current input digests, route trace, separate conformance/outcome objects, and distinct claim-bound evidence paths. Before a preset reaches `candidate`, test each skill as a future agent will receive it. Give a fresh agent the actual skill package, manifest-resolved raw repository artifacts and a realistic user task; do not reveal the expected patch, suspected failure or author conclusions.
 
-The suite covers at least:
+The suite covers every declared skill and at least:
 
 - direct trigger and a nearby task that must route elsewhere;
 - one established-pattern change and one cross-layer outcome;
@@ -128,14 +136,16 @@ The suite covers at least:
 - `new-pattern` refusing a false gap and handling a real gap;
 - UI work with async/action failure, responsive and accessibility states.
 
-Record untouched prompt, preset/skill/model/toolchain identity, input digests, route/read trace, patch/artifacts, commands, conformance result, user-outcome result and observed failure. Bind each verdict to its exact case/claim and use distinct evidence for conformance versus outcome; one generic pass record cannot qualify multiple claims. Evaluate trigger precision, required-resource loading, allowed paths, dependency direction, payload/result closure, evidence honesty and stop behavior. Correct the smallest skill, pointer, pattern or verifier defect, then rerun every case invalidated by that digest change.
+If `audit-changes` is present, add negative cases `audit-immutable-range` and `audit-checkpoint`, both explicitly routed to that skill. If `publish` is present, add negative cases `publish-topology`, `publish-conflict`, and `publish-final-revision`, all explicitly routed to that skill. Each standardized negative binds a substantive `{path, sha256}` adversarial input, expected `BLOCKED`/`REFUSED`/`TASK_REROUTED` disposition, and lowercase kebab-case failure code; both axis records report the matching observed disposition/code. A case with the correct kind but a different skill or happy-path input does not count. Neither does a stub, stale/misbound evidence, a shared cross-axis path, mismatched observed failure, or any case whose two axes are not both `PASS`.
+
+Record untouched prompt, preset/skill/model/toolchain identity, input digests, route/read trace, patch/artifacts, commands, conformance result, user-outcome result and observed failure. Bind each verdict to its exact case/claim and use distinct evidence paths for conformance versus outcome; a verdict-specific record contains one `result`, `claim_type`, `claim_id`, and canonical `case_input_sha256`, never both axes. The case digest uses domain `preset-skill-eval-case-v1` plus NUL and compact key-sorted UTF-8 JSON for ID, kind, ordered skills, untouched prompt, ordered route trace, authority input digests, and optional adversarial input/disposition/failure-code keys; it excludes verdicts and evidence refs. One generic pass record cannot qualify multiple claims, and prompt/route/expectation drift invalidates both axes. Evaluate trigger precision, required-resource loading, allowed paths, dependency direction, payload/result closure, evidence honesty and stop behavior. Correct the smallest skill, pointer, pattern or verifier defect, then rerun every case invalidated by that digest change.
 
 Keep two verdicts separate:
 
 - **pattern conformance:** code shape, ownership, APIs, contracts, fixtures and preset standards;
 - **requested outcome:** behavior, UX, accessibility, failure recovery and acceptance examples.
 
-Neither verdict implies the other.
+Neither verdict implies the other. Use only `PASS`, `FAIL`, `BLOCKED`, or `NOT_EXECUTED` on both axes. `TASK_REROUTED` and refusal may describe disposition, but they are not verdict values.
 
 ## Rule `REF-PRESET-SKILL-INTEGRITY-01`: version instructions with implementation
 
@@ -143,11 +153,11 @@ Neither verdict implies the other.
 
 A preset skill release is complete only when:
 
-- every registry path exists, names agree and skill/resource syntax validates;
+- every declared registry path exists, names agree and skill/resource syntax validates;
 - manifest, template, patterns, design contract, skills and source ledger describe one revision;
 - deterministic helpers pass representative success and failure fixtures;
 - clean-room materialization and exact verification commands pass;
-- forward evaluations pass both conformance and outcome gates independently;
+- every declared skill has forward evaluation, and candidate/verified cases pass conformance and outcome gates independently;
 - unsupported capabilities, fallbacks, source freshness and residual risks remain explicit.
 
 Do not install these skills globally from the distribution repository. Instantiation exposes only the selected app's locked, digest-verified skill registry through its agent router.

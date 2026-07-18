@@ -15,6 +15,7 @@ owns:
   - test lanes, flaky-test budget, and quarantine policy
   - deterministic test data and characterization-test policy
   - conditional browser/assistive-technology and generative testing
+  - public-contract and fitness-check proof quality
   - architecture fitness registry and ratchet
   - testing acceptance evidence
 ---
@@ -64,6 +65,8 @@ For each lane record trigger, maximum useful duration, isolation/resources, retr
 
 Track flaky tests as a count and/or failure-rate budget. Quarantine requires a visible original failure, issue/owner, reason, bounded scope, expiry, and replacement evidence for any critical contract. Reruns may diagnose nondeterminism but must not erase the first result. Exceeding the budget blocks new unowned quarantine and triggers a reliability reduction plan; security, migration, money, tenant-isolation, and recovery gates cannot be silently waived as flaky.
 
+A required test or checker reported as skipped, gated off, not collected, unparsed, or outside its declared file/runtime scope is `NOT_EXECUTED`, not passing evidence. Make this accounting visible in local and CI summaries.
+
 ## Rule `TEST-SEAM-01`: design controllable boundaries
 
 Code that depends on time, randomness, identifiers, environment, files, network, queues, or vendor SDKs must expose a controllable boundary when deterministic behavior matters.
@@ -75,6 +78,12 @@ Code that depends on time, randomness, identifiers, environment, files, network,
 - Assert public outputs, committed effects, and emitted contracts instead of private call order unless ordering is the behavior.
 
 Do not distort production design solely to satisfy a mocking framework. Testability should reinforce ownership and explicit dependencies.
+
+## Rule `PUBLIC-CONTRACT-PROOF-01`: prove callable and wire behavior, not names alone
+
+For a public API, module surface, event, job, or UI/server boundary, verify the callable signature and serialized request/result/error shape that consumers observe: required and optional fields, presence versus omission, `null`/`false`/`0` semantics, stable codes, versioning, and safe unknown/additive behavior where promised. Include at least one real consumer or boundary round trip when serialization, generated types, or framework wiring can drift.
+
+An exported symbol, type declaration, snapshot of property names, or successful build proves discoverability only. It does not prove runtime signature, wire compatibility, authorization scope, defaults, or persistence effects.
 
 ## Rule `TEST-DATA-01`: deterministic data has explicit ownership
 
@@ -139,6 +148,12 @@ Useful fitness functions include:
 
 Automate mechanical invariants in lint, tests, build analysis, schema comparison, or repository scripts. A prose rule without an enforceable check must name the manual evidence and review owner.
 
+## Rule `FITNESS-CHECK-PROOF-01`: architecture checkers prove that they can fail
+
+Each high-value checker has a conforming fixture and focused negative fixtures for every materially different rule branch. The negatives intentionally introduce the forbidden dependency, public leak, runtime crossing, missing scope, stale artifact, or threshold breach and assert a nonzero/actionable result. Include fixtures for ignored paths, unsupported syntax, parser failure, and configuration/glob exclusions when those could produce a false green.
+
+Run checker fixtures independently of the repository baseline. A green aggregate is not architecture evidence when relevant files were skipped, syntax was unparsed, a rule had no negative fixture, or the tool weakened itself to accept the fixture.
+
 ## Rule `FITNESS-RATCHET-01`: improve without blocking all progress
 
 For a brownfield baseline:
@@ -173,6 +188,8 @@ Selected test portfolio and why:
 Deterministic data/isolation:
 Characterization baseline, if any:
 Fitness functions and before/after counts:
+Public signature/wire-shape and edge-value proof:
+Checker positive/negative fixtures and skipped/unparsed accounting:
 Lane budgets, flaky count/rate, quarantines and expiry:
 Supported browser/AT matrix and conditional generative evidence:
 Commands/environment/results:

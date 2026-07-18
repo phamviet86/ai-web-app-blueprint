@@ -124,6 +124,22 @@ Before `STACK-*` acceptance or release:
 5. run migrations as a reviewed release job, then smoke full-page and HTMX paths against the promoted artifact;
 6. record database connection/pool limits, health/readiness, telemetry flushing, rollback/roll-forward and backup/restore boundaries.
 
+## Portable qualification mapping
+
+| Core contract | Mapping required from an accepted project profile |
+| --- | --- |
+| Concrete authority | Use either the exact preset lock or a validated app profile that binds accepted Django stack artifacts, pattern/skill registries, command registry, dual-verdict evaluations and current digests; installed apps and model discovery are evidence only |
+| Vertical task routing | The accepted skill/pattern registry maps one outcome to one primary feature/interaction owner and any infrastructure, reusable UI, template or composition support tasks; the analyzer applies the core task-time evidence tiers, `TASK_REROUTED` disposition and two verdict axes without inventing layer-shaped patterns |
+| Command lanes | Map `install`, `doctor`, `test`, `check`, `build` and a bounded production-artifact `start-smoke` to exact environment/lock commands; run selected migration, static, auth and browser lanes in clean room rather than accepting configuration presence or touching production |
+| Data access modes | Map `NONE`, bounded `LIVE_READ`, guarded `TEST_MUTATION` and `PRODUCTION_HANDOFF` to explicit Django/PostgreSQL tools and authority; every mutating test wrapper rechecks the isolated database before setup or fixtures |
+| Boundary values | Prove meaningful false/null/zero/omitted form and query values, actual stored identifier shapes, timezone/default behavior and module imports without premature production settings or external clients |
+| Public query/UI contract | Bind validated feature intent to allowed reads and prove both full-page and fragment wire shapes plus loading, empty, error, stale, denied, success, focus, responsive and pending/double-submit behavior |
+| Schema history and external effects | Use the accepted stack migration mechanism for ordered integrity, clean replay, compatibility, postchecks and recovery; claim external intent before network I/O, finalize afterward and reconcile ambiguous outcomes without an unsafe ordinary retry |
+| Fitness evidence | Add negative public/import/architecture fixtures, full-versus-fragment wire-shape checks, transaction races and real interaction proof; system checks, static collection or skipped/ignored browser scope do not imply those results |
+| Operations and optional skills | Map alerts to an owned diagnostic/runbook, and give every live read, drill or production action an explicit data mode plus separate external-side-effect, interface, approval, postcheck and recovery boundaries. If the project declares audit or publish skills, bind immutable revisions and deployment/repository topology through project policy; this profile does not prescribe branch or remote behavior |
+
+The same portable outcomes therefore map without importing a JavaScript framework, client cache, ORM migration policy or component library into the core rule.
+
 ## Verification routing
 
 | Contract | Minimum useful evidence |

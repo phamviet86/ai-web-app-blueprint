@@ -187,6 +187,22 @@ Better Auth (or replacement) belongs under platform identity infrastructure:
 
 For public web journeys, the current Core Web Vitals “good” thresholds are a useful initial profile: LCP at or below `2.5s`, INP at or below `200ms`, and CLS at or below `0.1`, assessed at the 75th percentile separately for mobile and desktop. Treat these as dated defaults from [web.dev](https://web.dev/articles/vitals), then add journey-specific server, bundle, query, capacity, and cost budgets from core guide `10`.
 
+## Portable qualification mapping
+
+| Core contract | Mapping required from an accepted project profile |
+| --- | --- |
+| Concrete authority | Use either the exact preset lock or a validated app profile that binds the accepted stack artifact, pattern/skill registries, command registry, dual-verdict evaluations and current digests; source folders alone grant no authority |
+| Vertical task routing | The accepted skill/pattern registry maps one outcome to one primary feature/interaction owner and any platform, shared, UI or composition support tasks; the analyzer applies the core task-time evidence tiers, `TASK_REROUTED` disposition and two verdict axes without inventing layer-shaped patterns |
+| Command lanes | Map `install`, `doctor`, `test`, `check`, `build` and a bounded production-artifact `start-smoke` to exact lockfile-compatible commands; run selected generation, database, auth and browser lanes in clean room rather than inferring them from package metadata or touching production |
+| Data access modes | Map `NONE`, bounded `LIVE_READ`, guarded `TEST_MUTATION` and `PRODUCTION_HANDOFF` to explicit Prisma/PostgreSQL tools and authority; every test mutation wrapper rechecks the disposable target before opening a client |
+| Boundary values | Prove meaningful `false`, `null`, zero and omission behavior, actual persisted identifier shapes, named timezone/default handling and import paths that do not eagerly require runtime-only secrets or clients |
+| Public query/UI contract | Bind validated feature intent to allowed read operations and prove the exact server/client wire shape plus loading, empty, error, stale, denied, success, focus, responsive and pending/double-submit behavior |
+| Schema history and external effects | Use the accepted stack migration mechanism for ordered integrity, clean replay, compatibility, postchecks and recovery; claim external intent before network I/O, finalize afterward and reconcile ambiguous outcomes without an unsafe ordinary retry |
+| Fitness evidence | Add negative import/runtime/architecture fixtures, wire-shape contract checks, database concurrency cases and real interaction proof; lint/build or an unparsed/ignored file never supplies those claims |
+| Operations and optional skills | Map alerts to an owned diagnostic/runbook, and give every live read, drill or production action an explicit data mode plus separate external-side-effect, interface, approval, postcheck and recovery boundaries. If the project declares audit or publish skills, bind exact revisions and topology through project policy; this candidate profile does not prescribe direct-main, worktree or remote behavior |
+
+These rows demonstrate how the portable outcomes can map to this stack family. They do not upgrade this candidate mapping or transfer the Bingo LMS source profile's compatibility evidence.
+
 ## Same-stack verification routing
 
 Before exact implementation:

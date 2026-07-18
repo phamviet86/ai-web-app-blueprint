@@ -33,7 +33,9 @@ docs/presets/<preset-id>/
 │   ├── <preset-id>-feature/SKILL.md
 │   ├── <preset-id>-app/SKILL.md
 │   ├── <preset-id>-new-pattern/SKILL.md
-│   └── <preset-id>-ui/SKILL.md
+│   ├── <preset-id>-ui/SKILL.md
+│   ├── <preset-id>-audit-changes/SKILL.md  # optional, exact capability key
+│   └── <preset-id>-publish/SKILL.md        # optional, exact capability key
 ├── patterns/
 │   ├── catalog.json
 │   ├── exemplars/<pattern-id>/
@@ -42,6 +44,7 @@ docs/presets/<preset-id>/
 │   ├── ui-contract.json
 │   └── evidence/
 └── verification/
+    ├── commands.json                  # digested argv-based command lanes
     ├── sources.json
     ├── skill-evals.json
     ├── integrity.json                 # required from candidate onward
@@ -50,7 +53,7 @@ docs/presets/<preset-id>/
     └── evidence/
 ```
 
-Each skill may add only the `references/`, `scripts/`, or `assets/` resources it actually uses. Do not add a README, changelog, installation guide, or duplicate reference text inside a skill package. A preset may add narrowly scoped skills, but it must keep the seven canonical capabilities above.
+Each skill may add only the `references/`, `scripts/`, or `assets/` resources it actually uses. Do not add a README, changelog, installation guide, or duplicate reference text inside a skill package. A preset may add narrowly scoped skills, but it must keep the seven canonical capabilities above. `audit-changes` and `publish` are the standardized optional keys; every declared skill must have forward-evaluation coverage.
 
 Every Codex-targeted skill also provides `agents/openai.yaml` with nonempty `interface.display_name`, `interface.short_description`, and a `default_prompt` that names `$<preset-id>-<capability>`. This metadata is a platform adapter; `SKILL.md` remains the portable trigger/workflow authority.
 
@@ -72,4 +75,4 @@ Status belongs to one immutable preset version and blueprint revision. A depende
 
 An agent compares the requested outcome with the preset's capabilities, compatibility, hard prerequisites, and verified flows. It must not claim support from the presence of sample code alone or silently combine modules from different presets.
 
-Instantiation materializes all declared root and `src/` entries, installs exact dependencies, maps the seven skill packages through the app's `AGENTS.md`, writes `docs/governance/preset-lock.json`, verifies integrity, and runs clean-room checks. Local evolution remains allowed; later upgrades compare the lock, local decisions, and target preset instead of overwriting user changes.
+Instantiation materializes all declared root and `src/` entries, installs exact dependencies, maps every declared skill package through the app's `AGENTS.md`, writes `docs/governance/preset-lock.json`, verifies integrity, and executes the locked `install`, `doctor`, `test`, `check`, `build`, and `start-smoke` command lanes in clean-room verification. Local evolution remains allowed; later upgrades compare the lock, local decisions, and target preset instead of overwriting user changes.

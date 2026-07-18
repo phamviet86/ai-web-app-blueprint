@@ -3,7 +3,7 @@ document_id: SKEL-CHANGELOG
 title: Package Changelog
 status: experimental
 audience: human-and-ai
-package_version: 0.11.0
+package_version: 0.12.0
 ---
 
 # Changelog
@@ -13,6 +13,32 @@ All notable package-contract changes are recorded here. Versions follow [MATURIT
 ## Unreleased
 
 - None.
+
+## 0.12.0 - 2026-07-18
+
+### Added
+
+- Stack-neutral app-profile authority contract and validator for existing/custom applications that cannot claim preset materialization provenance.
+- Versioned verification-command registry with required install, doctor, test, check, build and start-smoke lanes bound to clean-room evidence.
+- Portable data-access task modes for no access, bounded live read, guarded test mutation and production handoff.
+- Optional `audit-changes` and `publish` skill contracts with adversarial checkpoint/topology evaluations.
+- Revision-bound Bingo LMS repository-learning evidence that separates promoted invariants, source-specific exclusions and evidence limits.
+
+### Changed
+
+- Analyzer/skill routing now uses vertical pattern ownership, primary/support roles, explicit evidence tiers, task re-routing and separate requested-outcome/pattern-conformance verdicts.
+- Bootstrap, query/UI, data, integration, testing and operations owners now require edge-value, negative-fixture, wire-shape, interaction and evidence-completeness checks learned from revision-bound real-app repository evidence.
+- Preset and app-profile qualification now binds declared command lanes, all declared skills and current integrity/evaluation evidence instead of accepting file presence or a generic build.
+- Stack-profile, route-map, test-strategy, SLO/runbook and preset-contract templates advance to `1.1.0`; artifact-instance schema remains `1.0`.
+
+### Migration
+
+- Existing/custom apps adopting this release create and validate `docs/governance/app-profile.json`; apps already governed by a preset retain `preset-lock.json` and must not enable both authority paths.
+- Future candidate/verified presets add the command-registry reference and forward-evaluate every declared optional skill. The catalog remains empty, so no existing preset instance requires migration.
+
+### Maturity
+
+- Package remains `experimental`. One repository-derived stack source improves the rule set but does not establish clean-room preset usability, second-stack portability or production readiness.
 
 ## 0.11.0 - 2026-07-12
 

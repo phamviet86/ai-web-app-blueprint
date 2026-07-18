@@ -16,7 +16,7 @@ owns:
   - CI, artifact provenance, and supply-chain trust
   - first-party vulnerability response
   - release compatibility, rollout, rollback, and roll-forward
-  - telemetry governance, SLO, incident command, and operational recovery coordination
+  - telemetry governance, runbook action authority, SLO, incident command, and operational recovery coordination
 ---
 
 # Delivery, observability, and operations
@@ -199,6 +199,12 @@ Health endpoints must be cheap, bounded, and meaningful. Liveness should not res
 
 Operational readiness requires exercised evidence: inject or identify a known SLI result, confirm the alert reaches the intended route/on-call, execute the safe runbook or kill-switch path, record date/outcome, and assign follow-up actions. Configuration screenshots alone remain documentation-level evidence.
 
+## Rule `RUNBOOK-AUTHORITY-01`: diagnostics and mitigations declare their authority
+
+Every runbook step that can touch current data, a provider, deployment state, or another external system names its target, allowed interface, data-access mode from guide `12`, external-side-effect boundary, guard/approval, success observation, postcheck, recovery boundary, and human owner. A `LIVE_READ` diagnostic has no wider direct-connection fallback. A `TEST_MUTATION` drill stays inside its guarded disposable target. A production data change uses a separately authorized `PRODUCTION_HANDOFF`. A publish/release/deploy step that does not access data keeps data mode `NONE` but still declares whether it is a non-mutating isolated simulation or a separately authorized operator action. The diagnostic or validation task does not silently acquire either kind of mutation authority.
+
+When an app declares the optional `publish` skill, it may validate the exact source revision, required gates, repository/deployment topology, and final destination identity. It stops or reroutes on ambiguous topology, conflicts, moved targets, or a final revision different from the validated revision; it does not gain implicit conflict-resolution or production authority. Exercise both the safe path and the declared stop path without using a real external publish lane in clean-room verification.
+
 ## Rule `INCIDENT-RECOVERY-01`: recovery is practiced evidence
 
 Maintain incident severity, command, communication, containment, recovery, and escalation procedures. Record a timeline and follow with a blameless review that creates owned, prioritized actions.
@@ -217,6 +223,7 @@ Schema/API/event compatibility:
 Rollout stages, guardrails, and owner:
 Rollback/roll-forward decision and trigger:
 Dashboards/alerts/runbooks/health checks:
+Runbook data mode / external-side-effect boundary / approval / postcheck / recovery evidence:
 Telemetry cardinality/sampling/retention/access/cost evidence:
 Data-recovery evidence and achieved RPO/RTO from guide 12:
 First-party vulnerability and infrastructure-drift status:
@@ -232,7 +239,8 @@ Stop a release or redesign the path when:
 - schema/data/event changes make both rollback and roll-forward undefined;
 - a flag/canary has no owner, measurement, kill path, or expiry;
 - logs contain secrets or cannot correlate a critical workflow;
-- an alert has no actionable threshold, owner, or runbook;
+- an alert has no actionable threshold, owner, diagnostic context, or runbook;
+- a runbook read can widen its interface silently, or a diagnostic/validation step can acquire a data or external-system mutation without a new handoff and owner;
 - recovery targets are claimed without restore/failover evidence;
 - dependency or vulnerability exceptions are unbounded;
 - first-party vulnerability intake/triage/patch ownership is absent;

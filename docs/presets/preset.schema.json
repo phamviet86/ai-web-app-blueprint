@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/phamviet86/ai-web-app-blueprint/main/docs/presets/preset.schema.json",
   "title": "AI Web App Blueprint preset manifest",
-  "description": "Machine-checkable shape for preset.json. Repository validation additionally resolves paths, names, referenced files, cross-file contracts, and SHA-256 values.",
+  "description": "Machine-checkable v1.1 shape for preset.json. Repository validation additionally resolves paths, names, declared skills, the verification command registry, cross-file contracts, and SHA-256 values.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -25,7 +25,7 @@
   ],
   "properties": {
     "$schema": { "type": "string" },
-    "schema_version": { "$ref": "#/$defs/version" },
+    "schema_version": { "const": "1.1.0" },
     "preset_id": { "$ref": "#/$defs/presetId" },
     "preset_version": { "$ref": "#/$defs/version" },
     "blueprint_version": { "$ref": "#/$defs/version" },
@@ -79,6 +79,7 @@
     },
     "skills": {
       "type": "object",
+      "propertyNames": { "$ref": "#/$defs/kebabId" },
       "additionalProperties": { "$ref": "#/$defs/skill" },
       "required": ["analyze-request", "lib", "shared", "feature", "app", "new-pattern", "ui"],
       "properties": {
@@ -88,7 +89,9 @@
         "feature": { "$ref": "#/$defs/skill" },
         "app": { "$ref": "#/$defs/skill" },
         "new-pattern": { "$ref": "#/$defs/skill" },
-        "ui": { "$ref": "#/$defs/skill" }
+        "ui": { "$ref": "#/$defs/skill" },
+        "audit-changes": { "$ref": "#/$defs/skill" },
+        "publish": { "$ref": "#/$defs/skill" }
       }
     },
     "patterns": {
@@ -112,8 +115,9 @@
     "verification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["skill_evals"],
+      "required": ["commands", "skill_evals"],
       "properties": {
+        "commands": { "$ref": "#/$defs/digestedFile" },
         "skill_evals": { "$ref": "#/$defs/fileReference" },
         "integrity": { "$ref": "#/$defs/fileReference" },
         "clean_room_evidence": {
@@ -180,8 +184,9 @@
             "items": { "$ref": "#/$defs/verifiedFlow" }
           },
           "verification": {
-            "required": ["skill_evals", "integrity", "clean_room_evidence"],
+            "required": ["commands", "skill_evals", "integrity", "clean_room_evidence"],
             "properties": {
+              "commands": { "$ref": "#/$defs/digestedFile" },
               "skill_evals": { "$ref": "#/$defs/digestedFile" },
               "integrity": { "$ref": "#/$defs/digestedFile" },
               "clean_room_evidence": {

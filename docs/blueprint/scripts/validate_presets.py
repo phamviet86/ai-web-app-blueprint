@@ -34,6 +34,7 @@ EXTERNAL_SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*:", re.IGNORECASE)
 RFC3339 = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
 )
+ENVIRONMENT_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 STATUSES = {"experimental", "candidate", "verified", "deprecated", "retired"}
 REQUIRED_SKILLS = {
@@ -45,6 +46,29 @@ REQUIRED_SKILLS = {
     "new-pattern",
     "ui",
 }
+BASELINE_COMMAND_LANES = {
+    "install",
+    "doctor",
+    "test",
+    "check",
+    "build",
+    "start-smoke",
+}
+EXTERNALLY_MUTATING_COMMAND_LANES = {"publish", "release", "deploy"}
+AUDIT_NEGATIVE_EVAL_KINDS = {
+    "audit-immutable-range",
+    "audit-checkpoint",
+}
+PUBLISH_NEGATIVE_EVAL_KINDS = {
+    "publish-topology",
+    "publish-conflict",
+    "publish-final-revision",
+}
+STANDARD_NEGATIVE_EVAL_KINDS = (
+    AUDIT_NEGATIVE_EVAL_KINDS | PUBLISH_NEGATIVE_EVAL_KINDS
+)
+ADVERSARIAL_DISPOSITIONS = {"BLOCKED", "REFUSED", "TASK_REROUTED"}
+DUAL_VERDICTS = {"PASS", "FAIL", "BLOCKED", "NOT_EXECUTED"}
 REQUIRED_HEADINGS = {
     "inputs",
     "workflow",
@@ -113,8 +137,9 @@ class Counts:
 
 
 class PresetValidator:
-    def __init__(self, presets_root: Path):
+    def __init__(self, presets_root: Path, *, now: datetime | None = None):
         self.root = presets_root.resolve()
+        self.now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
         self.findings: list[Finding] = []
         self.skill_count = 0
         self.pattern_count = 0
@@ -337,8 +362,8 @@ class PresetValidator:
             self.add(manifest_path, "preset_id must be a <=47 character lowercase kebab name")
 
         schema_version = manifest.get("schema_version")
-        if not isinstance(schema_version, str) or not SEMVER.fullmatch(schema_version):
-            self.add(manifest_path, "schema_version must be an exact semantic version")
+        if schema_version != "1.1.0":
+            self.add(manifest_path, "schema_version must equal 1.1.0")
         for field in ("preset_version", "blueprint_version"):
             value = manifest.get(field)
             if not isinstance(value, str) or not SEMVER.fullmatch(value):
@@ -378,7 +403,7 @@ class PresetValidator:
             preset,
             manifest_path,
             manifest.get("patterns"),
-            known_skill_refs,
+            set(skills),
             status if isinstance(status, str) else "",
         )
         source_records = self.validate_sources(
@@ -415,6 +440,7 @@ class PresetValidator:
             manifest_path,
             manifest.get("verification"),
             known_skill_refs,
+            skills,
             status if isinstance(status, str) else "",
         )
 
@@ -795,6 +821,8 @@ class PresetValidator:
             return {}, set()
         skills = {key: value for key, value in raw.items() if isinstance(value, dict)}
         for key, value in raw.items():
+            if not isinstance(key, str) or not KEBAB_NAME.fullmatch(key):
+                self.add(owner, f"skill capability must be lowercase kebab-case: {key}")
             if not isinstance(value, dict):
                 self.add(owner, f"skill {key} must be an object")
         for capability in sorted(REQUIRED_SKILLS - raw.keys()):
@@ -1061,7 +1089,7 @@ class PresetValidator:
         preset: Path,
         owner: Path,
         raw: Any,
-        known_skills: set[str],
+        declared_skill_capabilities: set[str],
         status: str,
     ) -> None:
         if not isinstance(raw, dict):
@@ -1104,13 +1132,42 @@ class PresetValidator:
                 seen.add(pattern_id)
             if not isinstance(entry.get("layer"), str) or not entry["layer"].strip():
                 self.add(catalog_path, f"{label}.layer must be nonempty")
-            skill_refs = entry.get("skills")
-            if not isinstance(skill_refs, list) or not skill_refs:
-                self.add(catalog_path, f"{label}.skills must be a nonempty list")
+            if "skills" in entry:
+                self.add(
+                    catalog_path,
+                    f"{label}.skills is legacy; use primary_owner and support_skills",
+                )
+            primary_owner = entry.get("primary_owner")
+            if (
+                not isinstance(primary_owner, str)
+                or primary_owner not in declared_skill_capabilities
+            ):
+                self.add(
+                    catalog_path,
+                    f"{label}.primary_owner must reference one declared skill",
+                )
+            support_skills = entry.get("support_skills")
+            if (
+                not isinstance(support_skills, list)
+                or not all(isinstance(skill_ref, str) for skill_ref in support_skills)
+                or len(support_skills) != len(set(support_skills))
+            ):
+                self.add(
+                    catalog_path,
+                    f"{label}.support_skills must be a unique string list",
+                )
             else:
-                for skill_ref in skill_refs:
-                    if not isinstance(skill_ref, str) or skill_ref not in known_skills:
-                        self.add(catalog_path, f"{label} references unknown skill: {skill_ref}")
+                if primary_owner in support_skills:
+                    self.add(
+                        catalog_path,
+                        f"{label}.primary_owner must not also appear in support_skills",
+                    )
+                for skill_ref in support_skills:
+                    if skill_ref not in declared_skill_capabilities:
+                        self.add(
+                            catalog_path,
+                            f"{label}.support_skills references unknown skill: {skill_ref}",
+                        )
             dependency_validity: dict[str, bool] = {}
             for field in ("allowed_dependencies", "forbidden_dependencies"):
                 value = entry.get(field)
@@ -1126,12 +1183,47 @@ class PresetValidator:
                 overlap = sorted(set(allowed) & set(forbidden))
                 if overlap:
                     self.add(catalog_path, f"{label} allows and forbids: {', '.join(overlap)}")
-            self.validate_path_list(
+            exemplar_paths = self.validate_path_list(
                 preset, catalog_path, entry.get("examples"), f"{label}.examples", nonempty=True
             )
-            self.safe_path(
+            if status in {"candidate", "verified"}:
+                for exemplar_path in exemplar_paths:
+                    if not self.has_substantive_pattern_resource(exemplar_path):
+                        self.add(
+                            catalog_path,
+                            f"{label}.examples must contain substantive regular content: "
+                            f"{exemplar_path.relative_to(preset.resolve()).as_posix()}",
+                        )
+            verifier_path = self.safe_path(
                 preset, entry.get("verifier"), catalog_path, f"{label}.verifier", kind="file"
             )
+            verifier_argv = entry.get("verifier_argv")
+            if (
+                not isinstance(verifier_argv, list)
+                or not verifier_argv
+                or not all(
+                    isinstance(argument, str)
+                    and bool(argument)
+                    and not any(
+                        ord(character) < 32 or ord(character) == 127
+                        for character in argument
+                    )
+                    for argument in verifier_argv
+                )
+            ):
+                self.add(
+                    catalog_path,
+                    f"{label}.verifier_argv must be a nonempty control-free string list",
+                )
+            elif entry.get("verifier") not in verifier_argv:
+                self.add(
+                    catalog_path,
+                    f"{label}.verifier_argv must include the exact verifier path",
+                )
+            if verifier_path is not None and not self.has_substantive_resource_content(
+                verifier_path
+            ):
+                self.add(catalog_path, f"{label}.verifier must contain substantive content")
             fixtures = entry.get("fixtures")
             if not isinstance(fixtures, dict):
                 self.add(catalog_path, f"{label}.fixtures must be an object")
@@ -1144,6 +1236,60 @@ class PresetValidator:
                         f"{label}.fixtures.{polarity}",
                         nonempty=True,
                     )
+                if status in {"candidate", "verified"}:
+                    negative = fixtures.get("negative")
+                    negative_paths = {
+                        value for value in negative if isinstance(value, str)
+                    } if isinstance(negative, list) else set()
+                    expected_failures = fixtures.get("expected_failures")
+                    if not isinstance(expected_failures, dict):
+                        self.add(
+                            catalog_path,
+                            f"{label}.fixtures.expected_failures must be an object",
+                        )
+                    else:
+                        for missing in sorted(negative_paths - expected_failures.keys()):
+                            self.add(
+                                catalog_path,
+                                f"{label}.fixtures.expected_failures missing negative fixture: {missing}",
+                            )
+                        for extra in sorted(expected_failures.keys() - negative_paths):
+                            self.add(
+                                catalog_path,
+                                f"{label}.fixtures.expected_failures has undeclared fixture: {extra}",
+                            )
+                        for fixture_path, expectation in expected_failures.items():
+                            expectation_label = (
+                                f"{label}.fixtures.expected_failures[{fixture_path}]"
+                            )
+                            if not isinstance(expectation, dict):
+                                self.add(
+                                    catalog_path,
+                                    f"{expectation_label} must be an object",
+                                )
+                                continue
+                            for field in sorted({"code", "reason"} - expectation.keys()):
+                                self.add(
+                                    catalog_path,
+                                    f"{expectation_label} missing required field: {field}",
+                                )
+                            for field in sorted(expectation.keys() - {"code", "reason"}):
+                                self.add(
+                                    catalog_path,
+                                    f"{expectation_label} has unknown field: {field}",
+                                )
+                            code = expectation.get("code")
+                            reason = expectation.get("reason")
+                            if not isinstance(code, str) or not KEBAB_NAME.fullmatch(code):
+                                self.add(
+                                    catalog_path,
+                                    f"{expectation_label}.code must be lowercase kebab-case",
+                                )
+                            if not isinstance(reason, str) or not reason.strip():
+                                self.add(
+                                    catalog_path,
+                                    f"{expectation_label}.reason must be nonempty",
+                                )
             if status in {"candidate", "verified"}:
                 intent = entry.get("intent")
                 if not isinstance(intent, str) or not intent.strip():
@@ -1192,7 +1338,7 @@ class PresetValidator:
                             preset, catalog_path, reference, evidence_label
                         )
                         if path is not None:
-                            self.validate_dual_verdict_evidence(
+                            validated_evidence = self.validate_dual_verdict_evidence(
                                 preset,
                                 path,
                                 "pattern evidence",
@@ -1200,6 +1346,307 @@ class PresetValidator:
                                 "pattern",
                                 str(pattern_id),
                             )
+                            if isinstance(validated_evidence, dict):
+                                self.validate_pattern_execution_evidence(
+                                    preset,
+                                    path,
+                                    validated_evidence,
+                                    entry,
+                                    label,
+                                )
+
+    @staticmethod
+    def has_substantive_resource_content(path: Path) -> bool:
+        if path.name == ".gitkeep":
+            return False
+        try:
+            content = path.read_bytes()
+        except OSError:
+            return False
+        if not content.strip():
+            return False
+        try:
+            text = content.decode("utf-8")
+        except UnicodeDecodeError:
+            return True
+        text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
+        text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+        hash_comment_suffixes = {
+            ".py",
+            ".pyi",
+            ".sh",
+            ".bash",
+            ".zsh",
+            ".rb",
+            ".yaml",
+            ".yml",
+            ".toml",
+        }
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if stripped.startswith("#!"):
+                return True
+            if stripped.startswith(("//", "--")):
+                continue
+            if path.suffix.lower() in hash_comment_suffixes and stripped.startswith("#"):
+                continue
+            return True
+        return False
+
+    @classmethod
+    def has_substantive_pattern_resource(cls, path: Path) -> bool:
+        if path.is_file():
+            return cls.has_substantive_resource_content(path)
+        if not path.is_dir():
+            return False
+        try:
+            resources = sorted(
+                path.rglob("*"),
+                key=lambda item: item.relative_to(path).as_posix().encode("utf-8"),
+            )
+        except OSError:
+            return False
+        return any(
+            resource.is_file()
+            and not resource.is_symlink()
+            and cls.has_substantive_resource_content(resource)
+            for resource in resources
+        )
+
+    @staticmethod
+    def pattern_contract_digest(pattern: dict[str, Any]) -> str:
+        """Digest one catalog entry while excluding its circular evidence refs."""
+        contract = {key: value for key, value in pattern.items() if key != "evidence"}
+        serialized = json.dumps(
+            contract,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+        digest = hashlib.sha256()
+        digest.update(b"preset-pattern-contract-v1\0")
+        digest.update(serialized)
+        return digest.hexdigest()
+
+    def validate_pattern_execution_evidence(
+        self,
+        preset: Path,
+        evidence_path: Path,
+        evidence: dict[str, Any],
+        pattern: dict[str, Any],
+        pattern_label: str,
+    ) -> None:
+        execution = evidence.get("execution")
+        if not isinstance(execution, dict):
+            self.add(evidence_path, "pattern evidence.execution must be an object")
+            return
+        required = {
+            "run_id",
+            "actor",
+            "toolchain",
+            "environment",
+            "observed_at",
+            "pattern_contract_sha256",
+            "verifier",
+            "fixtures",
+        }
+        for field in sorted(required - execution.keys()):
+            self.add(evidence_path, f"pattern execution missing required field: {field}")
+        for field in sorted(execution.keys() - required):
+            self.add(evidence_path, f"pattern execution has unknown field: {field}")
+        for field in ("run_id", "actor", "toolchain", "environment"):
+            value = execution.get(field)
+            if not isinstance(value, str) or not value.strip():
+                self.add(evidence_path, f"pattern execution.{field} must be nonempty")
+        run_id = execution.get("run_id")
+        if isinstance(run_id, str) and not KEBAB_NAME.fullmatch(run_id):
+            self.add(
+                evidence_path,
+                "pattern execution.run_id must be lowercase kebab-case",
+            )
+        execution_observed_at = execution.get("observed_at")
+        if not self.valid_timestamp(execution_observed_at):
+            self.add(
+                evidence_path,
+                "pattern execution.observed_at must be timezone-aware RFC 3339",
+            )
+        elif execution_observed_at != evidence.get("observed_at"):
+            self.add(
+                evidence_path,
+                "pattern execution.observed_at must equal pattern evidence.observed_at",
+            )
+        pattern_contract_sha256 = execution.get("pattern_contract_sha256")
+        if not isinstance(pattern_contract_sha256, str) or not SHA256.fullmatch(
+            pattern_contract_sha256
+        ):
+            self.add(
+                evidence_path,
+                "pattern execution.pattern_contract_sha256 must be SHA-256",
+            )
+        elif pattern_contract_sha256 != self.pattern_contract_digest(pattern):
+            self.add(
+                evidence_path,
+                "pattern execution.pattern_contract_sha256 is stale or misbound",
+            )
+
+        declared_verifier = pattern.get("verifier")
+        verifier = execution.get("verifier")
+        if not isinstance(verifier, dict):
+            self.add(evidence_path, "pattern execution.verifier must be an object")
+        else:
+            verifier_fields = {"path", "sha256", "argv", "exit_code"}
+            for field in sorted(verifier_fields - verifier.keys()):
+                self.add(
+                    evidence_path,
+                    f"pattern execution.verifier missing required field: {field}",
+                )
+            for field in sorted(verifier.keys() - verifier_fields):
+                self.add(
+                    evidence_path,
+                    f"pattern execution.verifier has unknown field: {field}",
+                )
+            verifier_path_raw = verifier.get("path")
+            if verifier_path_raw != declared_verifier:
+                self.add(
+                    evidence_path,
+                    "pattern execution.verifier.path must equal catalog verifier",
+                )
+            verifier_path = self.safe_path(
+                preset,
+                verifier_path_raw,
+                evidence_path,
+                "pattern execution.verifier.path",
+                kind="file",
+            )
+            if verifier_path is not None:
+                self.check_digest(
+                    evidence_path,
+                    verifier_path,
+                    verifier.get("sha256"),
+                    "pattern execution.verifier.sha256",
+                )
+                if not self.has_substantive_resource_content(verifier_path):
+                    self.add(
+                        evidence_path,
+                        "pattern execution verifier must contain substantive content",
+                    )
+            argv = verifier.get("argv")
+            if (
+                not isinstance(argv, list)
+                or not argv
+                or not all(isinstance(argument, str) and argument for argument in argv)
+            ):
+                self.add(
+                    evidence_path,
+                    "pattern execution.verifier.argv must be a nonempty string list",
+                )
+            elif argv != pattern.get("verifier_argv"):
+                self.add(
+                    evidence_path,
+                    "pattern execution.verifier.argv must equal catalog verifier_argv",
+                )
+            if verifier.get("exit_code") != 0:
+                self.add(
+                    evidence_path,
+                    "pattern execution.verifier.exit_code must equal 0",
+                )
+
+        declared_fixtures = pattern.get("fixtures")
+        observed_fixtures = execution.get("fixtures")
+        if not isinstance(observed_fixtures, dict):
+            self.add(evidence_path, "pattern execution.fixtures must be an object")
+            return
+        for polarity in ("positive", "negative"):
+            expected_paths = (
+                declared_fixtures.get(polarity)
+                if isinstance(declared_fixtures, dict)
+                and isinstance(declared_fixtures.get(polarity), list)
+                else []
+            )
+            records = observed_fixtures.get(polarity)
+            if not isinstance(records, list):
+                self.add(
+                    evidence_path,
+                    f"pattern execution.fixtures.{polarity} must be a list",
+                )
+                continue
+            observed_paths: set[str] = set()
+            for index, record in enumerate(records):
+                label = f"pattern execution.fixtures.{polarity}[{index}]"
+                if not isinstance(record, dict):
+                    self.add(evidence_path, f"{label} must be an object")
+                    continue
+                record_fields = {"path", "sha256", "observed"}
+                if polarity == "negative":
+                    record_fields.add("observed_failure")
+                for field in sorted(record_fields - record.keys()):
+                    self.add(evidence_path, f"{label} missing required field: {field}")
+                for field in sorted(record.keys() - record_fields):
+                    self.add(evidence_path, f"{label} has unknown field: {field}")
+                raw_path = record.get("path")
+                if isinstance(raw_path, str):
+                    if raw_path in observed_paths:
+                        self.add(evidence_path, f"duplicate observed fixture path: {raw_path}")
+                    observed_paths.add(raw_path)
+                fixture_path = self.safe_path(
+                    preset,
+                    raw_path,
+                    evidence_path,
+                    f"{label}.path",
+                    kind="file",
+                )
+                if fixture_path is not None:
+                    self.check_digest(
+                        evidence_path,
+                        fixture_path,
+                        record.get("sha256"),
+                        f"{label}.sha256",
+                    )
+                    if not self.has_substantive_resource_content(fixture_path):
+                        self.add(
+                            evidence_path,
+                            f"{label} must contain substantive content",
+                        )
+                required_observation = "accept" if polarity == "positive" else "reject"
+                if record.get("observed") != required_observation:
+                    self.add(
+                        evidence_path,
+                        f"{label}.observed must equal {required_observation}",
+                    )
+                if polarity == "negative":
+                    expected_failures = (
+                        declared_fixtures.get("expected_failures")
+                        if isinstance(declared_fixtures, dict)
+                        and isinstance(declared_fixtures.get("expected_failures"), dict)
+                        else {}
+                    )
+                    expected_failure = expected_failures.get(raw_path)
+                    observed_failure = record.get("observed_failure")
+                    if not isinstance(observed_failure, dict):
+                        self.add(
+                            evidence_path,
+                            f"{label}.observed_failure must be an object",
+                        )
+                    elif observed_failure != expected_failure:
+                        self.add(
+                            evidence_path,
+                            f"{label}.observed_failure must equal the catalog expected failure",
+                        )
+            expected_set = {
+                value for value in expected_paths if isinstance(value, str)
+            }
+            for missing in sorted(expected_set - observed_paths):
+                self.add(
+                    evidence_path,
+                    f"pattern execution omitted {polarity} fixture: {missing}",
+                )
+            for extra in sorted(observed_paths - expected_set):
+                self.add(
+                    evidence_path,
+                    f"pattern execution has undeclared {polarity} fixture: {extra}",
+                )
 
     def validate_path_list(
         self,
@@ -1209,7 +1656,7 @@ class PresetValidator:
         label: str,
         *,
         nonempty: bool,
-    ) -> None:
+    ) -> list[Path]:
         if (
             not isinstance(raw, list)
             or (nonempty and not raw)
@@ -1217,9 +1664,13 @@ class PresetValidator:
         ):
             qualifier = "nonempty " if nonempty else ""
             self.add(owner, f"{label} must be a {qualifier}path list")
-            return
+            return []
+        resolved: list[Path] = []
         for item in raw:
-            self.safe_path(preset, item, owner, label)
+            path = self.safe_path(preset, item, owner, label)
+            if path is not None:
+                resolved.append(path)
+        return resolved
 
     def validate_sources(
         self, preset: Path, owner: Path, raw: Any
@@ -1528,18 +1979,116 @@ class PresetValidator:
                             f"UI framework binding is not an exact stack item: {binding}",
                         )
 
+    def validate_command_registry(
+        self, preset: Path, owner: Path, raw: Any
+    ) -> dict[str, dict[str, Any]]:
+        if not isinstance(raw, dict):
+            self.add(owner, "verification.commands must include path and sha256")
+        path = self.ref_path(preset, owner, raw, "verification.commands")
+        if path is None:
+            return {}
+        data = self.load_json(path, "verification command registry")
+        if not isinstance(data, dict):
+            if data is not None:
+                self.add(path, "verification command registry must be a JSON object")
+            return {}
+        allowed = {"$schema", "schema_version", "lanes"}
+        for field in sorted({"schema_version", "lanes"} - data.keys()):
+            self.add(path, f"verification command registry missing required field: {field}")
+        for field in sorted(data.keys() - allowed):
+            self.add(path, f"verification command registry has unknown field: {field}")
+        if "$schema" in data and (
+            not isinstance(data["$schema"], str) or not data["$schema"].strip()
+        ):
+            self.add(path, "verification command registry $schema must be nonempty")
+        if data.get("schema_version") != "1.0.0":
+            self.add(path, "verification command registry schema_version must equal 1.0.0")
+        raw_lanes = data.get("lanes")
+        if not isinstance(raw_lanes, dict):
+            self.add(path, "verification command registry lanes must be an object")
+            return {}
+        for lane in sorted(BASELINE_COMMAND_LANES - raw_lanes.keys()):
+            self.add(path, f"verification command registry missing required lane: {lane}")
+
+        validated: dict[str, dict[str, Any]] = {}
+        for lane, command in sorted(raw_lanes.items()):
+            label = f"lanes.{lane}"
+            if not isinstance(lane, str) or not KEBAB_NAME.fullmatch(lane):
+                self.add(path, f"command lane must be lowercase kebab-case: {lane}")
+            elif lane in EXTERNALLY_MUTATING_COMMAND_LANES:
+                self.add(
+                    path,
+                    f"command lane {lane} is externally mutating and forbidden; "
+                    "declare a safe *-simulate lane instead",
+                )
+            if not isinstance(command, dict):
+                self.add(path, f"{label} must be an object")
+                continue
+            allowed_fields = {
+                "argv",
+                "cwd",
+                "required_environment",
+                "timeout_seconds",
+            }
+            for field in sorted(command.keys() - allowed_fields):
+                self.add(path, f"{label} has unknown field: {field}")
+            argv = command.get("argv")
+            if (
+                not isinstance(argv, list)
+                or not argv
+                or not all(
+                    isinstance(argument, str)
+                    and bool(argument)
+                    and not any(ord(character) < 32 or ord(character) == 127 for character in argument)
+                    for argument in argv
+                )
+            ):
+                self.add(path, f"{label}.argv must be a nonempty control-free string list")
+            cwd = command.get("cwd", ".")
+            if cwd != "." and not self.is_safe_relative(cwd):
+                self.add(path, f"{label}.cwd must be . or a portable POSIX-relative path")
+            elif cwd != ".":
+                self.safe_path(
+                    preset,
+                    cwd,
+                    path,
+                    f"{label}.cwd",
+                    kind="dir",
+                )
+            environment = command.get("required_environment", [])
+            if (
+                not isinstance(environment, list)
+                or not all(isinstance(item, str) for item in environment)
+                or len(environment) != len(set(environment))
+            ):
+                self.add(path, f"{label}.required_environment must be a unique string list")
+            elif not all(ENVIRONMENT_NAME.fullmatch(item) for item in environment):
+                self.add(path, f"{label}.required_environment contains an invalid name")
+            timeout = command.get("timeout_seconds")
+            if lane == "start-smoke" and timeout is None:
+                self.add(path, f"{label}.timeout_seconds is required for start-smoke")
+            if timeout is not None and (
+                not isinstance(timeout, int) or isinstance(timeout, bool) or timeout < 1
+            ):
+                self.add(path, f"{label}.timeout_seconds must be a positive integer")
+            if isinstance(lane, str) and isinstance(argv, list) and argv:
+                validated[lane] = command
+        return validated
+
     def validate_verification(
         self,
         preset: Path,
         owner: Path,
         raw: Any,
         known_skills: set[str],
+        declared_skills: dict[str, dict[str, Any]],
         status: str,
     ) -> None:
         if not isinstance(raw, dict):
             self.add(owner, "verification must be an object")
             return
         expected = {
+            "commands",
             "skill_evals",
             "integrity",
             "clean_room_evidence",
@@ -1547,6 +2096,9 @@ class PresetValidator:
         }
         for field in sorted(raw.keys() - expected):
             self.add(owner, f"verification has unknown field: {field}")
+        command_registry = self.validate_command_registry(
+            preset, owner, raw.get("commands")
+        )
         if status in {"candidate", "verified"} and not isinstance(
             raw.get("skill_evals"), dict
         ):
@@ -1558,12 +2110,24 @@ class PresetValidator:
             if cases is not None:
                 covered: set[str] = set()
                 covered_skills: set[str] = set()
+                skills_by_kind: dict[str, set[str]] = {}
+                skill_capability_by_ref = {
+                    capability: capability for capability in declared_skills
+                }
+                skill_capability_by_ref.update(
+                    {
+                        str(record.get("name")): capability
+                        for capability, record in declared_skills.items()
+                        if isinstance(record.get("name"), str)
+                    }
+                )
                 case_ids: set[str] = set()
                 for index, case in enumerate(cases):
                     label = f"case[{index}]"
                     if not isinstance(case, dict):
                         self.add(eval_path, f"{label} must be an object")
                         continue
+                    finding_count = len(self.findings)
                     kind = next(
                         (
                             case.get(key)
@@ -1572,31 +2136,57 @@ class PresetValidator:
                         ),
                         None,
                     )
+                    normalized_kind: str | None = None
                     if not isinstance(kind, str) or not kind.strip():
                         self.add(eval_path, f"{label} requires a case kind")
                     else:
-                        covered.add(kind.replace("_", "-").lower())
+                        normalized_kind = kind.replace("_", "-").lower()
                     skill_refs = case.get("skills")
+                    case_capabilities: set[str] = set()
                     if not isinstance(skill_refs, list) or not skill_refs:
                         self.add(eval_path, f"{label}.skills must be a nonempty list")
                     else:
                         for skill_ref in skill_refs:
                             if not isinstance(skill_ref, str) or skill_ref not in known_skills:
                                 self.add(eval_path, f"{label} references unknown skill: {skill_ref}")
-                            elif skill_ref in REQUIRED_SKILLS:
-                                covered_skills.add(skill_ref)
-                    if status in {"candidate", "verified"}:
-                        self.validate_eval_case(
-                            preset, eval_path, case, label, case_ids, status
-                        )
+                            elif skill_ref in skill_capability_by_ref:
+                                capability = skill_capability_by_ref[skill_ref]
+                                case_capabilities.add(capability)
+                    both_axes_pass = self.validate_eval_case(
+                        preset, eval_path, case, label, case_ids, status
+                    )
+                    if both_axes_pass and len(self.findings) == finding_count:
+                        if normalized_kind is not None:
+                            covered.add(normalized_kind)
+                            skills_by_kind.setdefault(normalized_kind, set()).update(
+                                case_capabilities
+                            )
+                        covered_skills.update(case_capabilities)
                 for kind in sorted(REQUIRED_EVAL_KINDS - covered):
                     self.add(eval_path, f"skill evals missing required case: {kind}")
-                if status in {"candidate", "verified"}:
-                    for capability in sorted(REQUIRED_SKILLS - covered_skills):
+                for capability in sorted(set(declared_skills) - covered_skills):
+                    self.add(
+                        eval_path,
+                        f"skill evals do not forward-test declared skill: {capability}",
+                    )
+                optional_eval_kinds: dict[str, set[str]] = {
+                    "audit-changes": AUDIT_NEGATIVE_EVAL_KINDS,
+                    "publish": PUBLISH_NEGATIVE_EVAL_KINDS,
+                }
+                for capability, required_kinds in optional_eval_kinds.items():
+                    if capability not in declared_skills:
+                        continue
+                    for kind in sorted(required_kinds - covered):
                         self.add(
                             eval_path,
-                            f"skill evals do not forward-test required skill: {capability}",
+                            f"skill evals missing required {capability} negative case: {kind}",
                         )
+                    for kind in sorted(required_kinds & covered):
+                        if capability not in skills_by_kind.get(kind, set()):
+                            self.add(
+                                eval_path,
+                                f"required {capability} negative case {kind} must reference skill: {capability}",
+                            )
 
         evidence = raw.get("clean_room_evidence")
         if status in {"candidate", "verified"}:
@@ -1612,6 +2202,7 @@ class PresetValidator:
                 clean_run_ids: set[str] = set()
             else:
                 clean_run_ids = set()
+                clean_command_lanes: set[str] = set()
                 for index, reference in enumerate(evidence):
                     label = f"verification.clean_room_evidence[{index}]"
                     if not isinstance(reference, dict):
@@ -1630,11 +2221,26 @@ class PresetValidator:
                             status=status,
                             required_context="clean-room",
                             require_commands=True,
+                            command_registry=command_registry,
                         )
                         if isinstance(validated, dict) and isinstance(
                             validated.get("run_id"), str
                         ):
                             clean_run_ids.add(validated["run_id"])
+                        if isinstance(validated, dict) and isinstance(
+                            validated.get("commands"), list
+                        ):
+                            clean_command_lanes.update(
+                                command.get("lane")
+                                for command in validated["commands"]
+                                if isinstance(command, dict)
+                                and isinstance(command.get("lane"), str)
+                            )
+                for lane in sorted(set(command_registry) - clean_command_lanes):
+                    self.add(
+                        owner,
+                        f"clean-room evidence did not execute declared command lane: {lane}",
+                    )
             if status == "verified":
                 independent = raw.get("independent_use_evidence")
                 if not isinstance(independent, list) or not independent:
@@ -1671,6 +2277,7 @@ class PresetValidator:
                                 status=status,
                                 required_context="independent-use",
                                 require_commands=True,
+                                command_registry=command_registry,
                             )
                             if isinstance(validated, dict):
                                 run_id = validated.get("run_id")
@@ -1705,6 +2312,7 @@ class PresetValidator:
                                 status=status,
                                 required_context="independent-use",
                                 require_commands=True,
+                                command_registry=command_registry,
                             )
         elif evidence is not None:
             if not isinstance(evidence, list):
@@ -1747,7 +2355,7 @@ class PresetValidator:
         label: str,
         case_ids: set[str],
         status: str,
-    ) -> dict[str, Any] | None:
+    ) -> bool:
         required = {
             "id",
             "kind",
@@ -1776,6 +2384,53 @@ class PresetValidator:
         ):
             self.add(owner, f"{label}.route_trace must be a nonempty string list")
 
+        normalized_kind = (
+            case.get("kind").replace("_", "-").lower()
+            if isinstance(case.get("kind"), str)
+            else None
+        )
+        expected_disposition: str | None = None
+        expected_failure_code: str | None = None
+        if normalized_kind in STANDARD_NEGATIVE_EVAL_KINDS:
+            adversarial_input = case.get("adversarial_input")
+            if not isinstance(adversarial_input, dict):
+                self.add(
+                    owner,
+                    f"{label}.adversarial_input must include path and sha256",
+                )
+            adversarial_path = self.ref_path(
+                preset,
+                owner,
+                adversarial_input,
+                f"{label}.adversarial_input",
+            )
+            if adversarial_path is not None and not self.has_substantive_resource_content(
+                adversarial_path
+            ):
+                self.add(
+                    owner,
+                    f"{label}.adversarial_input must contain substantive content",
+                )
+            raw_disposition = case.get("expected_disposition")
+            if raw_disposition not in ADVERSARIAL_DISPOSITIONS:
+                self.add(
+                    owner,
+                    f"{label}.expected_disposition must be one of: "
+                    f"{', '.join(sorted(ADVERSARIAL_DISPOSITIONS))}",
+                )
+            elif isinstance(raw_disposition, str):
+                expected_disposition = raw_disposition
+            raw_failure_code = case.get("expected_failure_code")
+            if not isinstance(raw_failure_code, str) or not KEBAB_NAME.fullmatch(
+                raw_failure_code
+            ):
+                self.add(
+                    owner,
+                    f"{label}.expected_failure_code must be lowercase kebab-case",
+                )
+            else:
+                expected_failure_code = raw_failure_code
+
         input_digests = case.get("input_digests")
         expected = self.evaluation_input_locks(preset)
         if not isinstance(input_digests, dict):
@@ -1802,6 +2457,7 @@ class PresetValidator:
             }
         if verdict_paths["conformance"] & verdict_paths["outcome"]:
             self.add(owner, f"{label} conformance and outcome evidence must be distinct")
+        case_input_sha256 = self.evaluation_case_digest(case)
         for verdict in ("conformance", "outcome"):
             self.validate_eval_verdict(
                 preset,
@@ -1811,7 +2467,15 @@ class PresetValidator:
                 status,
                 str(case_id),
                 verdict,
+                case_input_sha256,
+                expected_disposition,
+                expected_failure_code,
             )
+        return all(
+            isinstance(case.get(verdict), dict)
+            and case[verdict].get("result") == "PASS"
+            for verdict in ("conformance", "outcome")
+        )
 
     def validate_eval_verdict(
         self,
@@ -1822,12 +2486,21 @@ class PresetValidator:
         status: str,
         case_id: str,
         verdict: str,
+        case_input_sha256: str,
+        expected_disposition: str | None,
+        expected_failure_code: str | None,
     ) -> None:
         if not isinstance(raw, dict):
             self.add(owner, f"{label} must be an object")
             return
-        if raw.get("result") != "pass":
-            self.add(owner, f"{label}.result must be pass")
+        result = raw.get("result")
+        if result not in DUAL_VERDICTS:
+            self.add(
+                owner,
+                f"{label}.result must be one of: {', '.join(sorted(DUAL_VERDICTS))}",
+            )
+        elif result != "PASS" and status in {"candidate", "verified"}:
+            self.add(owner, f"{label}.result must be PASS for {status} qualification")
         evidence = raw.get("evidence")
         if not isinstance(evidence, list) or not evidence:
             self.add(owner, f"{label}.evidence must be a nonempty list")
@@ -1838,14 +2511,46 @@ class PresetValidator:
                 self.add(owner, f"{evidence_label} must include path and sha256")
             path = self.ref_path(preset, owner, reference, evidence_label)
             if path is not None:
-                self.validate_dual_verdict_evidence(
+                self.validate_verdict_evidence(
                     preset,
                     path,
                     "skill-eval evidence",
                     status,
                     f"skill-eval-{verdict}",
                     case_id,
+                    str(result),
+                    case_input_sha256,
+                    expected_disposition,
+                    expected_failure_code,
                 )
+
+    @staticmethod
+    def evaluation_case_digest(case: dict[str, Any]) -> str:
+        """Digest only evaluator inputs, never verdicts or their evidence refs."""
+        envelope = {
+            field: case.get(field)
+            for field in (
+                "id",
+                "kind",
+                "skills",
+                "prompt",
+                "route_trace",
+                "input_digests",
+                "adversarial_input",
+                "expected_disposition",
+                "expected_failure_code",
+            )
+        }
+        serialized = json.dumps(
+            envelope,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+        digest = hashlib.sha256()
+        digest.update(b"preset-skill-eval-case-v1\0")
+        digest.update(serialized)
+        return digest.hexdigest()
 
     @staticmethod
     def valid_timestamp(raw: Any) -> bool:
@@ -1877,6 +2582,7 @@ class PresetValidator:
         status: str,
         required_context: str,
         require_commands: bool = False,
+        command_registry: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         data = self.load_json(path, label)
         if not isinstance(data, dict):
@@ -1932,16 +2638,57 @@ class PresetValidator:
                 self.add(path, f"{label}.commands must be a nonempty list")
             else:
                 for index, command in enumerate(commands):
-                    if (
-                        not isinstance(command, dict)
-                        or not isinstance(command.get("command"), str)
-                        or not command["command"].strip()
-                        or command.get("exit_code") != 0
-                    ):
+                    command_label = f"{label}.commands[{index}]"
+                    if not isinstance(command, dict):
                         self.add(
                             path,
-                            f"{label}.commands[{index}] requires command and exit_code 0",
+                            f"{command_label} must be an object",
                         )
+                        continue
+                    allowed = {"lane", "argv", "cwd", "exit_code"}
+                    if command.get("lane") == "start-smoke":
+                        allowed.update(
+                            {"readiness_observed", "termination_observed"}
+                        )
+                    for field in sorted(command.keys() - allowed):
+                        self.add(path, f"{command_label} has unknown field: {field}")
+                    lane = command.get("lane")
+                    argv = command.get("argv")
+                    if not isinstance(lane, str) or not KEBAB_NAME.fullmatch(lane):
+                        self.add(path, f"{command_label}.lane must be lowercase kebab-case")
+                    if (
+                        not isinstance(argv, list)
+                        or not argv
+                        or not all(isinstance(argument, str) and argument for argument in argv)
+                    ):
+                        self.add(path, f"{command_label}.argv must be a nonempty string list")
+                    if command.get("exit_code") != 0:
+                        self.add(path, f"{command_label}.exit_code must equal 0")
+                    if lane == "start-smoke":
+                        if command.get("readiness_observed") is not True:
+                            self.add(
+                                path,
+                                f"{command_label}.readiness_observed must equal true",
+                            )
+                        if command.get("termination_observed") is not True:
+                            self.add(
+                                path,
+                                f"{command_label}.termination_observed must equal true",
+                            )
+                    declared = (
+                        command_registry.get(lane)
+                        if isinstance(command_registry, dict) and isinstance(lane, str)
+                        else None
+                    )
+                    if declared is None:
+                        self.add(path, f"{command_label}.lane is not declared by the registry")
+                        continue
+                    if argv != declared.get("argv"):
+                        self.add(path, f"{command_label}.argv does not match the declared lane")
+                    declared_cwd = declared.get("cwd", ".")
+                    observed_cwd = command.get("cwd", ".")
+                    if observed_cwd != declared_cwd:
+                        self.add(path, f"{command_label}.cwd does not match the declared lane")
         return data
 
     def validate_dual_verdict_evidence(
@@ -1952,16 +2699,16 @@ class PresetValidator:
         status: str,
         claim_type: str,
         claim_id: str,
-    ) -> None:
+    ) -> dict[str, Any] | None:
         data = self.load_json(path, label)
         if not isinstance(data, dict):
             if data is not None:
                 self.add(path, f"{label} must be a JSON object")
-            return
-        if data.get("conformance") != "pass":
-            self.add(path, f"{label}.conformance must be pass")
-        if data.get("outcome") != "pass":
-            self.add(path, f"{label}.outcome must be pass")
+            return None
+        if data.get("conformance") != "PASS":
+            self.add(path, f"{label}.conformance must be PASS")
+        if data.get("outcome") != "PASS":
+            self.add(path, f"{label}.outcome must be PASS")
         if data.get("qualification") != status:
             self.add(path, f"{label}.qualification must equal {status}")
         if data.get("claim_type") != claim_type:
@@ -1987,6 +2734,83 @@ class PresetValidator:
             for name in sorted(expected.keys() & input_digests.keys()):
                 if input_digests[name] != expected[name]:
                     self.add(path, f"{label}.input_digests.{name} is stale or misbound")
+        return data
+
+    def validate_verdict_evidence(
+        self,
+        preset: Path,
+        path: Path,
+        label: str,
+        status: str,
+        claim_type: str,
+        claim_id: str,
+        expected_result: str,
+        expected_case_input_sha256: str,
+        expected_disposition: str | None,
+        expected_failure_code: str | None,
+    ) -> None:
+        data = self.load_json(path, label)
+        if not isinstance(data, dict):
+            if data is not None:
+                self.add(path, f"{label} must be a JSON object")
+            return
+        if "conformance" in data or "outcome" in data:
+            self.add(
+                path,
+                f"{label} must record one result axis, not conformance/outcome together",
+            )
+        result = data.get("result")
+        if result not in DUAL_VERDICTS:
+            self.add(
+                path,
+                f"{label}.result must be one of: {', '.join(sorted(DUAL_VERDICTS))}",
+            )
+        elif result != expected_result:
+            self.add(path, f"{label}.result must equal the case verdict {expected_result}")
+        if data.get("qualification") != status:
+            self.add(path, f"{label}.qualification must equal {status}")
+        if data.get("claim_type") != claim_type:
+            self.add(path, f"{label}.claim_type must equal {claim_type}")
+        if data.get("claim_id") != claim_id:
+            self.add(path, f"{label}.claim_id must equal {claim_id}")
+        case_input_sha256 = data.get("case_input_sha256")
+        if not isinstance(case_input_sha256, str) or not SHA256.fullmatch(
+            case_input_sha256
+        ):
+            self.add(path, f"{label}.case_input_sha256 must be SHA-256")
+        elif case_input_sha256 != expected_case_input_sha256:
+            self.add(path, f"{label}.case_input_sha256 is stale or misbound")
+        if expected_disposition is not None and data.get(
+            "observed_disposition"
+        ) != expected_disposition:
+            self.add(
+                path,
+                f"{label}.observed_disposition must equal {expected_disposition}",
+            )
+        if expected_failure_code is not None and data.get(
+            "observed_failure_code"
+        ) != expected_failure_code:
+            self.add(
+                path,
+                f"{label}.observed_failure_code must equal {expected_failure_code}",
+            )
+        if not self.valid_timestamp(data.get("observed_at")):
+            self.add(path, f"{label}.observed_at must be timezone-aware RFC 3339")
+        self.validate_evidence_freshness(
+            preset, path, label, data.get("observed_at")
+        )
+        input_digests = data.get("input_digests")
+        expected = self.evaluation_input_locks(preset)
+        if not isinstance(input_digests, dict):
+            self.add(path, f"{label}.input_digests must be an object")
+        else:
+            for name in sorted(expected.keys() - input_digests.keys()):
+                self.add(path, f"{label}.input_digests missing required input: {name}")
+            for name in sorted(input_digests.keys() - expected.keys()):
+                self.add(path, f"{label}.input_digests has unknown input: {name}")
+            for name in sorted(expected.keys() & input_digests.keys()):
+                if input_digests[name] != expected[name]:
+                    self.add(path, f"{label}.input_digests.{name} is stale or misbound")
 
     def evidence_input_locks(self, preset: Path) -> dict[str, str]:
         try:
@@ -2001,6 +2825,7 @@ class PresetValidator:
         verification = canonical.get("verification")
         if isinstance(verification, dict):
             canonical["verification"] = {
+                "commands": verification.get("commands"),
                 "skill_evals": verification.get("skill_evals")
             }
         serialized = json.dumps(
@@ -2027,13 +2852,18 @@ class PresetValidator:
                     locks[field] = digest
         skills = manifest.get("skills")
         if isinstance(skills, dict):
-            for capability in sorted(REQUIRED_SKILLS):
+            for capability in sorted(skills):
                 record = skills.get(capability)
                 if isinstance(record, dict):
                     digest = record.get("sha256")
                     if isinstance(digest, str) and SHA256.fullmatch(digest):
                         locks[f"skill:{capability}"] = digest
         if isinstance(verification, dict):
+            commands_ref = verification.get("commands")
+            if isinstance(commands_ref, dict):
+                digest = commands_ref.get("sha256")
+                if isinstance(digest, str) and SHA256.fullmatch(digest):
+                    locks["commands"] = digest
             eval_ref = verification.get("skill_evals")
             if isinstance(eval_ref, dict):
                 digest = eval_ref.get("sha256")
@@ -2060,7 +2890,7 @@ class PresetValidator:
         if not isinstance(stale_days, int) or isinstance(stale_days, bool) or stale_days < 1:
             return
         observed = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
-        age = datetime.now(timezone.utc) - observed.astimezone(timezone.utc)
+        age = self.now - observed.astimezone(timezone.utc)
         if age.total_seconds() < -300:
             self.add(path, f"{label}.observed_at must not be in the future")
         elif age.days >= stale_days:
@@ -2150,10 +2980,12 @@ class PresetValidator:
         return None
 
 
-def validate_presets(presets_root: Path) -> tuple[list[Finding], Counts]:
+def validate_presets(
+    presets_root: Path, *, now: datetime | None = None
+) -> tuple[list[Finding], Counts]:
     """Return deterministic findings and aggregate counts for a preset catalog."""
 
-    return PresetValidator(presets_root).validate()
+    return PresetValidator(presets_root, now=now).validate()
 
 
 def build_parser() -> argparse.ArgumentParser:

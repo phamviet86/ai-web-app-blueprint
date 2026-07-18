@@ -2,16 +2,16 @@
 artifact_id: STACK-READING-001
 artifact_type: stack-profile
 schema_version: "1.0"
-artifact_version: 1
+artifact_version: 2
 title: Django PostgreSQL HTMX stack plan for Reading List
 status: in-review
 owner: example-web-team
 created_at: 2026-07-12
-updated_at: 2026-07-12
+updated_at: 2026-07-18
 scope:
   - system:reading-list
   - tier:basic-web
-source_template: REFAPP-TPL-STACK-PROFILE@1.0.0
+source_template: REFAPP-TPL-STACK-PROFILE@1.1.0
 supersedes: []
 superseded_by: null
 review_by: 2026-08-12
@@ -29,11 +29,21 @@ expires_at: null
 - Target: local showcase.
 - Refresh trigger: any version, deployment, capability, or exposure change.
 
+## Application authority binding
+
+- Authority route: not selected; this is a planning bundle, not a preset-instantiated or app-profile-adopted repository.
+- Blueprint/preset/source revisions and integrity digests: unresolved.
+- Artifact registry/system-profile bindings: `REGISTRY-READING-001` and `SYS-READING-001`; digests not produced.
+- Pattern/skill registries: planned below; no package or verifier exists.
+- Verification command registry/clean-room evidence: planned below; no command was executed.
+- Drift/authority refresh owner: example web team before stack acceptance.
+
 ## Acceptance gate
 
 - System/risk and coverage decisions are filled but remain example planning records.
 - Blocking spike `EVID-STACK-001` is `PLANNED`; therefore status remains `in-review`.
 - Exact Python, PostgreSQL driver, WSGI server, and lockfile versions are unresolved.
+- Neither authority route, its registries/digests, nor required clean-room command evidence exists; acceptance is blocked.
 
 ## Stack card
 
@@ -52,6 +62,14 @@ expires_at: null
 | Testing/fitness | Python/Django tests, PostgreSQL integration, browser accessibility, import check | Test | Repository tooling | `TEST-READING-001` draft | Tool substitutions preserve evidence layers |
 | CI/deployment | Clean local command path; no hosted target | Tooling | Repository scripts | `EVID-CI-001` `PLANNED` | Deployment profile required before hosting |
 
+## Planned analyzer outcome
+
+| Outcome | Task-time classification | Candidate pattern ID | Primary owner skill | Support skills/controls | Missing promotion evidence |
+| --- | --- | --- | --- | --- | --- |
+| Maintain one reading-list record through create/query/update/archive | `CANDIDATE_GAP` | `PAT-BOOK-MAINTAIN` | Books feature skill planned | Platform DB, shared form, UI and route support planned | Exemplar plus positive/negative verifier |
+
+This is a planning-time analyzer result, not an established pattern-catalog entry. It cannot become `ESTABLISHED_PATTERN` until the missing evidence exists and the selected authority accepts it.
+
 ## Executable topology
 
 | Root | Selected by capability | Runtime/deploy unit | Dependencies | Startup/shutdown | Health/owner |
@@ -68,6 +86,26 @@ expires_at: null
 | Database | Guarded Reading List database | Isolated PostgreSQL database | Not selected | Not selected |
 | Telemetry | Safe console logs | Captured structured logs | Not selected | Not selected |
 | Identity/providers | None | Controlled absence | Not selected | Not selected |
+
+## Verification command registry
+
+| Lane | Required / capability-selected | Declared argv/cwd | Environment / approval / side-effect boundary | Clean-room evidence/result |
+| --- | --- | --- | --- | --- | --- |
+| `install` | Required | Unresolved | Dependency-only; no secrets | `NOT_EXECUTED` |
+| `doctor` | Required | Unresolved | Read-only | `NOT_EXECUTED` |
+| `test` | Required | Unresolved | Synthetic data; guarded test target when integration is selected | `NOT_EXECUTED` |
+| `check` | Required | Unresolved | Read-only/static plus deterministic tests | `NOT_EXECUTED` |
+| `build` | Required | Unresolved | No production secret | `NOT_EXECUTED` |
+| `start-smoke` | Required | Unresolved | Bounded local startup/readiness/termination | `NOT_EXECUTED` |
+
+## Data-access policy
+
+| Mode | Allowed interface/target | Guard and negative proof | Stop condition/owner |
+| --- | --- | --- | --- |
+| `NONE` | Current planning and static checks | No connection opens | Default until an executable task selects another mode |
+| `LIVE_READ` | Not selected | No live interface exists | Stop if current data is requested |
+| `TEST_MUTATION` | Future isolated PostgreSQL target through repo wrapper | Target collision/in-process guard planned | Data owner must accept before integration proof |
+| `PRODUCTION_HANDOFF` | Not selected | No production target or operator | Hosted scope requires a new profile/task |
 
 ## Compatibility decisions and spikes
 

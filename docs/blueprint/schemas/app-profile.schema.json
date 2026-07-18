@@ -1,0 +1,551 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/phamviet86/ai-web-app-blueprint/main/docs/blueprint/schemas/app-profile.schema.json",
+  "title": "AI Web App Blueprint application profile",
+  "description": "Machine-checkable authority for an existing or custom application that does not use a preset lock. Repository validation additionally resolves paths, checks artifact and skill metadata, validates registries and dual-verdict skill evaluations, and verifies SHA-256 locks. Evidence input profile_inputs is SHA-256(ASCII 'app-profile-inputs-v1' + NUL + compact sorted-key UTF-8 JSON, ensure_ascii=false) over schema_version, profile_id, blueprint_version, blueprint_revision, source_revision, artifact_registry, artifact_closure, system_profile, stack_profile, skills, pattern_catalog.path only, verification_commands, and freshness_policy. Pattern catalog SHA is excluded from that envelope only to break its pattern-evidence cycle; every pattern separately binds its full semantic contract. clean_room_evidence and guidance_evidence are excluded because they consume the digest. freshness_policy is independently SHA-256 under domain 'app-profile-freshness-policy-v1' using the same canonical JSON serialization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "blueprint_version",
+    "blueprint_revision",
+    "source_revision",
+    "artifact_registry",
+    "artifact_closure",
+    "system_profile",
+    "stack_profile",
+    "skills",
+    "pattern_catalog",
+    "verification_commands",
+    "clean_room_evidence",
+    "guidance_evidence",
+    "freshness_policy"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schema_version": { "const": "1.0.0" },
+    "profile_id": { "$ref": "#/$defs/kebabId" },
+    "blueprint_version": { "const": "0.12.0" },
+    "blueprint_revision": { "$ref": "#/$defs/contentRevision" },
+    "source_revision": { "$ref": "#/$defs/sourceRevision" },
+    "artifact_registry": {
+      "allOf": [
+        { "$ref": "#/$defs/artifactReference" },
+        {
+          "properties": { "status": { "const": "active" } }
+        }
+      ]
+    },
+    "artifact_closure": {
+      "type": "array",
+      "minItems": 2,
+      "description": "Digest closure for every non-registry artifact row whose registry status is effective: active, accepted, final, approved, or in-progress. The validator enforces unique IDs/paths, exact registry identity/status/locator, current file digests/frontmatter, no missing or extra entries, and exact inclusion of system_profile and stack_profile.",
+      "items": { "$ref": "#/$defs/artifactReference" }
+    },
+    "system_profile": {
+      "allOf": [
+        { "$ref": "#/$defs/artifactReference" },
+        {
+          "properties": { "status": { "const": "active" } }
+        }
+      ]
+    },
+    "stack_profile": {
+      "allOf": [
+        { "$ref": "#/$defs/artifactReference" },
+        {
+          "properties": { "status": { "const": "accepted" } }
+        }
+      ]
+    },
+    "skills": {
+      "type": "object",
+      "minProperties": 7,
+      "required": [
+        "analyze-request",
+        "lib",
+        "shared",
+        "feature",
+        "app",
+        "new-pattern",
+        "ui"
+      ],
+      "propertyNames": { "$ref": "#/$defs/kebabId" },
+      "additionalProperties": { "$ref": "#/$defs/skillReference" },
+      "properties": {
+        "analyze-request": { "$ref": "#/$defs/skillReference" },
+        "lib": { "$ref": "#/$defs/skillReference" },
+        "shared": { "$ref": "#/$defs/skillReference" },
+        "feature": { "$ref": "#/$defs/skillReference" },
+        "app": { "$ref": "#/$defs/skillReference" },
+        "new-pattern": { "$ref": "#/$defs/skillReference" },
+        "ui": { "$ref": "#/$defs/skillReference" },
+        "audit-changes": { "$ref": "#/$defs/skillReference" },
+        "publish": { "$ref": "#/$defs/skillReference" }
+      }
+    },
+    "pattern_catalog": {
+      "$ref": "#/$defs/fileReference",
+      "description": "Digest-locked JSON document whose resolved content must satisfy $defs.patternCatalogDocument. The repository validator validates the referenced document; it records verifier execution but never executes verifier_argv.",
+      "x-referenced-document-schema": "#/$defs/patternCatalogDocument"
+    },
+    "verification_commands": { "$ref": "#/$defs/fileReference" },
+    "clean_room_evidence": { "$ref": "#/$defs/fileReference" },
+    "guidance_evidence": { "$ref": "#/$defs/guidanceReference" },
+    "freshness_policy": { "$ref": "#/$defs/freshnessPolicy" }
+  },
+  "$defs": {
+    "kebabId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 96
+    },
+    "artifactId": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+){2,}$",
+      "maxLength": 96
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "contentRevision": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64}|sha256:[0-9a-f]{64})$"
+    },
+    "sourceRevision": {
+      "type": "string",
+      "maxLength": 128,
+      "description": "Immutable VCS-neutral source identity: a full lowercase hexadecimal identity or an algorithm-qualified content digest. Movable selectors, tags, releases, and branch names are invalid.",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64}|sha256:[0-9a-f]{64})$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(?!/)(?!.*:)(?!.*\\\\)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:\\.\\.?|)(?:/|$)).+$"
+    },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "path", "sha256"],
+      "properties": {
+        "id": { "$ref": "#/$defs/artifactId" },
+        "status": { "type": "string", "minLength": 1 },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "skillReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path", "sha256"],
+      "properties": {
+        "name": { "$ref": "#/$defs/kebabId" },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "fileReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relativePath" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "guidanceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "current_revision", "path", "sha256", "skill_evals"],
+      "properties": {
+        "id": { "$ref": "#/$defs/artifactId" },
+        "current_revision": { "$ref": "#/$defs/sourceRevision" },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "skill_evals": {
+          "$ref": "#/$defs/fileReference",
+          "description": "Digest-locked skill evaluation document. Each axis evidence record binds case_input_sha256 = SHA-256(ASCII 'app-profile-skill-eval-case-v1' + NUL + UTF-8 RFC 8259 JSON of the canonical case envelope). The envelope has keys adversarial_fixture, expected_disposition, expected_failure, id, input_digests, kind, prompt, route_trace, skills; absent optional negative-case values serialize as JSON null. JSON is emitted with sorted keys, no insignificant whitespace, ensure_ascii=false. This domain-separated digest makes prompt, routing trace, authority locks, and optional adversarial contract changes invalidate both axes.",
+          "x-referenced-document-schema": "#/$defs/skillEvaluationDocument"
+        }
+      }
+    },
+    "freshnessPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stale_after_days"],
+      "properties": {
+        "stale_after_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365,
+          "description": "Maximum age of current execution evidence. Future timestamps beyond the validator's small clock-skew allowance are rejected."
+        }
+      }
+    },
+    "patternFixtureReference": {
+      "allOf": [
+        { "$ref": "#/$defs/fileReference" }
+      ]
+    },
+    "patternFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "reason"],
+      "properties": {
+        "code": { "$ref": "#/$defs/kebabId" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "establishedPattern": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "intent",
+        "primary_owner",
+        "support_skills",
+        "applicability",
+        "public_contract",
+        "allowed_dependencies",
+        "forbidden_dependencies",
+        "exemplar",
+        "verifier",
+        "verifier_argv",
+        "fixtures",
+        "verification_evidence"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/kebabId" },
+        "intent": { "type": "string", "minLength": 1 },
+        "primary_owner": { "$ref": "#/$defs/kebabId" },
+        "support_skills": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/kebabId" }
+        },
+        "applicability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["use_when", "avoid_when"],
+          "properties": {
+            "use_when": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "avoid_when": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "public_contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["inputs", "outputs", "states"],
+          "properties": {
+            "inputs": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "outputs": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "states": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "allowed_dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "forbidden_dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "exemplar": { "$ref": "#/$defs/fileReference" },
+        "verifier": { "$ref": "#/$defs/fileReference" },
+        "verifier_argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "fixtures": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["positive", "negative", "expected_failures"],
+          "properties": {
+            "positive": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/patternFixtureReference" }
+            },
+            "negative": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/patternFixtureReference" }
+            },
+            "expected_failures": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": { "$ref": "#/$defs/relativePath" },
+              "additionalProperties": { "$ref": "#/$defs/patternFailure" }
+            }
+          }
+        },
+        "verification_evidence": {
+          "$ref": "#/$defs/fileReference",
+          "description": "Resolved JSON content must satisfy $defs.patternVerificationEvidenceDocument. input_digests.pattern_contract is SHA-256(ASCII 'app-profile-pattern-contract-v1' + NUL + UTF-8 canonical JSON of the complete pattern entry except verification_evidence), with sorted keys, no insignificant whitespace, and ensure_ascii=false. Evidence records observed execution; validation never executes verifier_argv.",
+          "x-referenced-document-schema": "#/$defs/patternVerificationEvidenceDocument"
+        }
+      }
+    },
+    "patternCatalogDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "patterns"],
+      "properties": {
+        "$schema": { "type": "string", "minLength": 1 },
+        "schema_version": { "const": "1.0.0" },
+        "patterns": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/establishedPattern" }
+        }
+      }
+    },
+    "patternFixtureResult": {
+      "type": "object",
+      "required": ["polarity", "path", "sha256", "observed", "exit_code"],
+      "properties": {
+        "polarity": { "enum": ["positive", "negative"] },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "observed": { "enum": ["accept", "reject"] },
+        "exit_code": { "const": 0 },
+        "observed_failure": { "$ref": "#/$defs/patternFailure" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "polarity": { "const": "negative" } } },
+          "then": { "required": ["observed_failure"] },
+          "else": { "not": { "required": ["observed_failure"] } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "patternVerificationEvidenceDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "source_revision",
+        "pattern_id",
+        "input_digests",
+        "run_id",
+        "actor",
+        "toolchain",
+        "environment",
+        "observed_at",
+        "result",
+        "positive_result",
+        "negative_result",
+        "verifier_argv",
+        "verifier_exit_code",
+        "fixture_results"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "source_revision": { "$ref": "#/$defs/sourceRevision" },
+        "pattern_id": { "$ref": "#/$defs/kebabId" },
+        "input_digests": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "type": "string", "minLength": 1 },
+          "additionalProperties": { "$ref": "#/$defs/sha256" }
+        },
+        "run_id": { "type": "string", "minLength": 1 },
+        "actor": { "type": "string", "minLength": 1 },
+        "toolchain": { "type": "string", "minLength": 1 },
+        "environment": { "type": "string", "minLength": 1 },
+        "observed_at": { "type": "string", "format": "date-time" },
+        "result": { "const": "PASS" },
+        "positive_result": { "const": "PASS" },
+        "negative_result": { "const": "PASS" },
+        "verifier_argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "verifier_exit_code": { "const": 0 },
+        "fixture_results": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/patternFixtureResult" }
+        }
+      }
+    },
+    "digestMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "type": "string", "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/sha256" }
+    },
+    "adversarialEvaluationFixtureReference": {
+      "$ref": "#/$defs/fileReference",
+      "description": "Resolved JSON must contain schema_version 1.0.0, adversarial true, a nonempty scenario, and expected_disposition/expected_failure equal to the case."
+    },
+    "skillEvaluationAxisEvidenceDocument": {
+      "type": "object",
+      "description": "Observed axis execution. For standardized audit/publish negative cases the validator additionally requires observed_disposition and observed_failure to equal the case contract; those fields are forbidden for ordinary cases.",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "source_revision",
+        "case_id",
+        "axis",
+        "result",
+        "input_digests",
+        "case_input_sha256",
+        "run_id",
+        "actor",
+        "toolchain",
+        "environment",
+        "observed_at"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "source_revision": { "$ref": "#/$defs/sourceRevision" },
+        "case_id": { "$ref": "#/$defs/kebabId" },
+        "axis": { "enum": ["conformance", "outcome"] },
+        "result": { "const": "PASS" },
+        "input_digests": { "$ref": "#/$defs/digestMap" },
+        "case_input_sha256": { "$ref": "#/$defs/sha256" },
+        "observed_disposition": { "enum": ["BLOCKED", "REFUSED", "TASK_REROUTED"] },
+        "observed_failure": { "$ref": "#/$defs/kebabId" },
+        "run_id": { "type": "string", "minLength": 1 },
+        "actor": { "type": "string", "minLength": 1 },
+        "toolchain": { "type": "string", "minLength": 1 },
+        "environment": { "type": "string", "minLength": 1 },
+        "observed_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "skillEvaluationVerdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "evidence"],
+      "properties": {
+        "result": { "const": "PASS" },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/fileReference",
+            "x-referenced-document-schema": "#/$defs/skillEvaluationAxisEvidenceDocument"
+          }
+        }
+      }
+    },
+    "skillEvaluationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "skills",
+        "prompt",
+        "route_trace",
+        "input_digests",
+        "conformance",
+        "outcome"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/kebabId" },
+        "kind": { "$ref": "#/$defs/kebabId" },
+        "skills": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/kebabId" }
+        },
+        "prompt": { "type": "string", "minLength": 1 },
+        "route_trace": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "input_digests": { "$ref": "#/$defs/digestMap" },
+        "adversarial_fixture": { "$ref": "#/$defs/adversarialEvaluationFixtureReference" },
+        "expected_disposition": { "enum": ["BLOCKED", "REFUSED", "TASK_REROUTED"] },
+        "expected_failure": { "$ref": "#/$defs/kebabId" },
+        "conformance": { "$ref": "#/$defs/skillEvaluationVerdict" },
+        "outcome": { "$ref": "#/$defs/skillEvaluationVerdict" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "audit-immutable-range",
+                  "audit-checkpoint",
+                  "publish-topology",
+                  "publish-conflict",
+                  "publish-final-revision"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "adversarial_fixture",
+              "expected_disposition",
+              "expected_failure"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                { "required": ["adversarial_fixture"] },
+                { "required": ["expected_disposition"] },
+                { "required": ["expected_failure"] }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "skillEvaluationDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "source_revision", "cases"],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "source_revision": { "$ref": "#/$defs/sourceRevision" },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/skillEvaluationCase" }
+        }
+      }
+    }
+  }
+}

@@ -12,6 +12,7 @@ depends_on:
   - 01-foundations.md
 owns:
   - system-profile-first bootstrap
+  - application authority and command-lane bootstrap
   - walking vertical slice sequence
   - developer onboarding command contract
   - progressive human and AI adoption stages
@@ -47,6 +48,17 @@ stable local/CI commands -> executable evidence
 
 Do not replace existing canonical repo instructions silently. Map overlap and conflicts, choose the owner, migrate references, and remove stale duplicates. A human must accept product, risk, exception, and release decisions; an agent may not self-approve its draft.
 
+## Rule `APP-AUTHORITY-01`: application work follows one verified authority chain
+
+An instantiated application declares one current authority route before code work:
+
+- a preset-created app uses a `preset-lock` under the [preset contract](../presets/PRESET-CONTRACT.md), bound to the exact verified manifest revision, registries, source/design/evaluation evidence, and integrity digests; or
+- a customized or existing app uses an `app-profile` under the [app-profile schema](schemas/app-profile.schema.json), binding its accepted system/stack profiles, artifact registry, pattern and skill registries, [verification command registry](schemas/verification-command-registry.schema.json), revision-bound clean-room execution record, dual-verdict skill evaluations, source revision, and integrity digests.
+
+The selected route may record the other route's historical provenance, but it must not activate a second authority file. Source without either complete route is ungoverned; stale, missing, mismatched, or conflicting locks stop app work. Re-resolve paths through the locked registry rather than guessing from filenames, and record every accepted authority change as an explicit profile/lock update.
+
+Validate an app-profile fail-closed with `python3 docs/blueprint/scripts/validate_app_profile.py PATH --repo-root ROOT --expected-revision <current-source-revision> --expected-blueprint-revision <selected-blueprint-revision>`. Qualification never accepts a movable or unbound source/blueprint revision. Validator behavior and fixtures are owned by `DOCS-VALIDATION-01` in guide `07`.
+
 ## Phase 0: declare the system profile
 
 Before choosing structure or vendors, instantiate [templates/system-profile.md](templates/system-profile.md) and [templates/artifact-registry.md](templates/artifact-registry.md). Use the [filled profile example](templates/examples/system-profile-small-web-app.md) only to understand completeness. Capture:
@@ -78,18 +90,18 @@ A new contributor or agent should be able to:
 
 The onboarding path must state supported human prerequisites and non-interactive agent behavior. A setup step requiring secrets, destructive data changes, external messages, elevated access, or production mutation has an explicit approval/sandbox boundary.
 
-The concrete commands may differ, but the repo exposes one stable contract equivalent to:
+The concrete commands may differ, but the selected authority binds a machine-readable command registry exposing these required lanes:
 
 ```text
-setup       install + generate + local dependency bootstrap
-doctor      read-only environment/config/dependency diagnosis
-dev         start the supported local workflow
-test        focused/default deterministic tests
-check       formatting/lint/types/architecture/unit/integration gates
-build       production artifact build
+install       deterministic dependency installation
+doctor        read-only environment/config/dependency diagnosis
+test          focused/default deterministic tests
+check         formatting/lint/types/architecture/unit/integration gates
+build         production artifact build
+start-smoke   bounded startup plus readiness/termination proof
 ```
 
-CI remains authoritative. Local hooks improve feedback but must not be the only enforcement point.
+Add `generate`, guarded `data-reset`, `auth-smoke`, `browser-smoke`, or an isolated `restore-drill` only when the selected capability needs them. Real externally mutating publish/release commands never belong in this clean-room registry; only a separately named, non-mutating simulation against an isolated local target may be declared. Validators reject conventional `publish`, `release`, and `deploy` lane keys as defense in depth, but cannot infer arbitrary argv semantics: renaming an unsafe command does not make it safe, so the runner/reviewer still proves the target is isolated and no external production effect occurred. Registry entries use an unambiguous executable/argument/environment contract; the accepted profile identifies destructive or secret-bearing approval boundaries and the evidence owner. Clean-room verification executes every declared lane against the locked source; checking that scripts or files exist is not evidence that onboarding works. CI remains authoritative. Local hooks improve feedback but must not be the only enforcement point.
 
 ## Phase 1: architecture foundation
 
@@ -127,8 +139,10 @@ Acceptance:
 - authorization and input validation occur at trusted boundaries;
 - persistence migration and local test data are reproducible;
 - one representative trace/log correlation can be followed;
+- transport and persistence boundaries preserve meaningful `false`, `null`, `0`, and omitted values, real identifier shapes, timezone behavior, and declared defaults;
+- modules intended for analysis/test discovery import without opening a data/network connection or demanding runtime-only secrets before the owning operation starts;
 - unit/integration/contract checks cover the actual failure risks;
-- production build and CI pass.
+- required command lanes, production build, bounded startup smoke, and CI pass in a clean environment.
 
 ## Phase 2: safety and data baseline
 

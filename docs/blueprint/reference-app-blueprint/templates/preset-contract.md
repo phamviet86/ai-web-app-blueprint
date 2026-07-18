@@ -1,6 +1,6 @@
 ---
 template_id: REFAPP-TPL-PRESET-CONTRACT
-template_version: 1.0.0
+template_version: 1.1.0
 produces: preset-contract
 owner_guide: ../10-preset-authoring-and-instantiation.md
 use_when: Authoring or revising one versioned stack preset and proving its materialization and inter-layer compatibility.
@@ -17,7 +17,8 @@ Instantiate through [schema mapping](README.md) as `artifact_type: preset-contra
 - Owner / reviewer / decision date:
 - Preset ID / semantic version / maturity:
 - Blueprint version / revision:
-- `preset.json` path / schema version / manifest digest:
+- `preset.json` path / schema version `1.1.0` / manifest digest:
+- Verification command registry path / digest / schema version:
 - Source stack profile / exact lockfile provenance:
 - Pattern catalog / UI design contract / source ledger paths and digests:
 - Target archetype and supported capability tiers:
@@ -69,6 +70,10 @@ Guide [11](../11-preset-agent-skills-and-design-evidence.md) owns the skill cont
 | Add/modify app | | | | | |
 | Add/modify new pattern | | | | | |
 | Design/review UI | | | | | |
+| Audit immutable change range/checkpoint (optional) | | | | | |
+| Publish validated final revision (optional) | | | | | |
+
+For each coherent outcome, assign one vertical pattern and one evidence tier: `ESTABLISHED_PATTERN`, `PATTERN_EXTENSION`, or `CANDIDATE_GAP`. Give every task exactly one owner and exactly one data-access mode: `NONE`, `LIVE_READ`, `TEST_MUTATION`, or `PRODUCTION_HANDOFF`. Mark the semantic owner `primary`; mark lib/shared/UI/app tasks enabling the same flow `support` and inherit the same pattern. Treat `TASK_REROUTED` as analyzer continuation, not a verdict or outcome-level block.
 
 ## Pattern, source, design, and integrity synchronization
 
@@ -87,12 +92,21 @@ Guide [11](../11-preset-agent-skills-and-design-evidence.md) owns the skill cont
 
 Third-party output is untrusted advisory input. Record read-only/sandbox boundaries and accepted/rejected recommendations; do not install it globally or let it override official APIs, blueprint/preset rules, accessibility or product decisions.
 
+For every pattern, record one declared primary owner, unique declared support skills, exact `verifier_argv`, negative expected failure code/reason, and candidate/verified execution evidence. The execution record binds run provenance/time, the `preset-pattern-contract-v1` digest of the whole catalog entry except evidence refs, current verifier/fixture path digests, exact argv/zero exit, all positive accepts, and all negative rejects with matching observed code/reason. Missing/extra, empty/comment-only, wrong-command, stale-contract, or wrong-reason evidence blocks qualification.
+
 ## Clean-room verification
+
+The digested command registry uses structured argv and always declares `install`, `doctor`, `test`, `check`, `build`, and `start-smoke`. Every cwd is `.` or a preset-relative existing directory. Exact `publish`, `release`, and `deploy` lane keys are forbidden; use `*-simulate` only for a bounded non-mutating check against an isolated local target. The smoke lane has a positive timeout. Evidence must bind lane, exact argv/cwd, and exit code; every declared lane must execute, including optional additions, and `start-smoke` must record `readiness_observed: true` plus `termination_observed: true`.
 
 | Gate | Command/lab | Environment | `EVID-*` status/result | Blocks acceptance? |
 | --- | --- | --- | --- | --- |
 | Scaffold/materialize | | | | Yes |
-| Install/lockfile | | | | Yes |
+| `install` | | | | Yes |
+| `doctor` | | | | Yes |
+| `test` | | | | Yes |
+| `check` | | | | Yes |
+| `build` | | | | Yes |
+| `start-smoke` | | | | Yes |
 | Database/migration | | | | When selected |
 | Identity/session | | | | When selected |
 | Lint/typecheck/test/build | | | | Yes |
@@ -104,8 +118,10 @@ Third-party output is untrusted advisory input. Record read-only/sandbox boundar
 
 ## Skill forward-evaluation matrix
 
-| Case ID | Skill / untouched task | Clean context + input digests | Trigger/reads/paths result | Pattern verdict | Outcome verdict | Failure/correction/rerun |
+| Case ID / kind | Skill / untouched task | Tier / owner / role / route result | Clean context + input digests | Pattern verdict | Outcome verdict | Failure/correction/rerun |
 | --- | --- | --- | --- | --- | --- | --- |
+
+Every declared skill has coverage. If present, `audit-changes` includes `audit-immutable-range` and `audit-checkpoint`; `publish` includes `publish-topology`, `publish-conflict`, and `publish-final-revision`. Each negative case references its corresponding optional skill and binds a substantive adversarial input digest, expected disposition, and failure code to matching observed values. Use only `PASS`, `FAIL`, `BLOCKED`, or `NOT_EXECUTED`; conformance and outcome use distinct evidence paths whose records bind one axis only. Both records carry the same `case_input_sha256`, computed under `preset-skill-eval-case-v1` from the case ID/kind/skills/prompt/route trace, authority digests, and optional adversarial expectation fields, excluding verdict/evidence refs.
 
 ## Versioning and handoff
 

@@ -50,6 +50,8 @@ Validate and authorize:
 
 Reject invalid intent explicitly. Silently dropping a denied filter can broaden results and become a data leak.
 
+Normalization preserves meaning rather than relying on truthiness: `false`, `0`, explicit `null`, an empty value allowed by the field contract, and an omitted key remain distinguishable through transport, application DTO, translator, persistence, and response mapping. Defaults apply only at the boundary that owns them and only to the states its public contract declares absent. Test with real identifier shapes plus locale/timezone-sensitive values where they affect ordering, ranges, or cache identity.
+
 ## Rule `QUERY-DSL-01`: controls, predicates, and groups are different concepts
 
 UI `input/type` describes interaction. Predicate `op` describes query semantics. Logical groups compose predicates.
@@ -218,6 +220,7 @@ deletion/privacy propagation
 
 - allowed and denied fields/operators/projections/scopes;
 - coercion, enum/null/range semantics and malformed ASTs;
+- `false`, `0`, explicit `null`, empty, and omitted-value round trips, including declared defaults and real identifier/timezone cases;
 - depth/width/value/page/export limits and timeout behavior;
 - stable ordering, cursor tampering, empty/duplicate/deleted rows;
 - cache separation by every result/security dimension and success-only invalidation;

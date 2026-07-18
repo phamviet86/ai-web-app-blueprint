@@ -14,6 +14,7 @@ owns:
   - data inventory and classification
   - retention and deletion lifecycle
   - storage and environment isolation
+  - task-scoped data-access modes and mutation guards
   - schema migration and backfill safety
   - recovery objectives, backups, and restore drills
   - proportionate multi-store failover, fencing, and failback
@@ -85,9 +86,29 @@ Do not use soft delete as permanent retention by default. Do not promise immedia
 
 Select row, schema, database, account, region, or deployment isolation from the system profile. Test the selected boundary; folder naming or a `tenantId` column alone is not proof.
 
+## Rule `DATA-ACCESS-MODE-01`: every task declares one data authority
+
+Each task envelope selects exactly one mode, names the target, allowed interface, guard evidence, and stop condition:
+
+| Mode | Allowed purpose | Required boundary |
+| --- | --- | --- |
+| `NONE` | Code/docs/static work needing no data access | No database or live-data connection |
+| `LIVE_READ` | Bounded inspection of current data/schema | Approved least-privilege read-only interface; prove read-only state before the minimum-column query |
+| `TEST_MUTATION` | Mutation and assertion reads for executable proof | Disposable isolated target through a repository-owned guarded wrapper |
+| `PRODUCTION_HANDOFF` | Prepare an operator-applied production change | Exact reviewed artifact, pre/postchecks, recovery and ownership; no mutation in the handoff task |
+
+If the approved live-read interface is unavailable or its read-only state is unproved, stop; never fall back to application credentials, an ad hoc direct connection, a backup, or another wider interface. Reject write-like functions and analysis forms that execute statements under `LIVE_READ` even if their syntax begins as a read.
+
+For `TEST_MUTATION`, the wrapper that launches the mutating process validates the complete normalized target identity, proves it is disposable and distinct from every live target, and requires the repository's explicit test acknowledgement immediately before execution. A separate preflight, shell override, filename convention, or environment name is not a guard. Run setup, mutation, migration replay, and assertion reads through that guarded path; never copy live data to make the test pass.
+
+Changing mode changes authority and therefore creates a dependent task with a new envelope. In particular, close guarded test proof before creating a production handoff; do not silently turn inspection into mutation or execute handoff instructions on behalf of the operator.
+
 ## Rule `SCHEMA-HISTORY-01`: versioned migration history is the schema source of truth
 
+The accepted stack profile selects the migration mechanism and file format. Core requires these observable outcomes rather than prescribing a tool:
+
 - Commit ordered schema migrations and any required data transformation logic.
+- Verify canonical order and content integrity before execution; fail on missing, reordered, duplicated, or altered applied entries.
 - Review generated SQL/DDL before it reaches a persistent environment.
 - Never edit or delete an already-applied migration as routine repair.
 - Detect and reconcile drift rather than normalizing undocumented manual changes.
@@ -217,6 +238,7 @@ If several authoritative stores cannot share one recovery point, document the al
 - [ ] Classification drives environment, access, masking, encryption, retention, and incident handling.
 - [ ] Retention/deletion jobs and propagation paths have deterministic verification.
 - [ ] Tenant and environment isolation have automated negative evidence.
+- [ ] Every data-touching task records one mode; live reads have no direct fallback and test mutations cannot bypass the in-process target guard.
 - [ ] Migration history can bootstrap an empty store and upgrade every supported baseline.
 - [ ] Breaking changes have an expand-migrate-contract sequence and compatibility/removal gates.
 - [ ] Large backfills are bounded, resumable, idempotent, observable, and reconciled.
@@ -227,4 +249,4 @@ If several authoritative stores cannot share one recovery point, document the al
 
 ## Stop conditions
 
-Stop and redesign when no authoritative source is known, tenant or environment isolation depends on caller discipline, retention has no executable deletion path, an applied migration must be rewritten, a breaking schema change assumes instantaneous deploy, a backfill cannot resume safely, migration lock/size impact is unknown on a large store, RPO/RTO are unstated, every backup shares the production failure domain, multi-store promotion lacks fencing/failback proof, or no restore has ever been verified.
+Stop and redesign when no authoritative source is known, a data mode or guarded target is ambiguous, live inspection needs a direct fallback, tenant or environment isolation depends on caller discipline, retention has no executable deletion path, an applied migration must be rewritten, a breaking schema change assumes instantaneous deploy, a backfill cannot resume safely, migration lock/size impact is unknown on a large store, RPO/RTO are unstated, every backup shares the production failure domain, multi-store promotion lacks fencing/failback proof, or no restore has ever been verified.

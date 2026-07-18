@@ -9,10 +9,10 @@ Every `docs/presets/<preset-id>` contains:
 - a human README covering purpose, fit/non-fit, lifecycle, exact versions, and quick start;
 - `preset.json`, valid against [`preset.schema.json`](preset.schema.json);
 - a complete `template/` with framework-default root files and application source;
-- seven namespaced skill packages defined by [`AI-GUIDE-CONTRACT.md`](AI-GUIDE-CONTRACT.md);
+- seven canonical namespaced skill packages, plus any declared optional skills, defined by [`AI-GUIDE-CONTRACT.md`](AI-GUIDE-CONTRACT.md);
 - a pattern catalog with exemplars, deterministic verifiers, and positive/negative fixtures;
 - a versioned UI design contract and reviewable evidence;
-- deterministic clean-room, architecture, contract, behavior, integrity, and eval commands;
+- a digested verification command registry with deterministic clean-room, architecture, contract, behavior, integrity, and eval lanes;
 - at least one removable vertical walking slice proving declared layer contracts.
 
 No real preset may be marked `candidate` or `verified` from documentation alone.
@@ -24,10 +24,10 @@ Use JSON so a schema validator can reject incomplete or misspelled declarations 
 ```json
 {
   "$schema": "../preset.schema.json",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "preset_id": "next-ts-example",
   "preset_version": "0.1.0",
-  "blueprint_version": "0.11.0",
+  "blueprint_version": "0.12.0",
   "blueprint_revision": "<immutable-revision>",
   "status": "experimental",
   "archetype": "full-stack-web",
@@ -50,7 +50,9 @@ Use JSON so a schema validator can reject incomplete or misspelled declarations 
     "feature": { "name": "<namespaced-name>", "path": "<skill-path>", "sha256": "<64-hex>", "invocation": "<trigger>", "targets": ["codex"] },
     "app": { "name": "<namespaced-name>", "path": "<skill-path>", "sha256": "<64-hex>", "invocation": "<trigger>", "targets": ["codex"] },
     "new-pattern": { "name": "<namespaced-name>", "path": "<skill-path>", "sha256": "<64-hex>", "invocation": "<trigger>", "targets": ["codex"] },
-    "ui": { "name": "<namespaced-name>", "path": "<skill-path>", "sha256": "<64-hex>", "invocation": "<trigger>", "targets": ["codex"] }
+    "ui": { "name": "<namespaced-name>", "path": "<skill-path>", "sha256": "<64-hex>", "invocation": "<trigger>", "targets": ["codex"] },
+    "audit-changes": { "name": "<optional-namespaced-name>", "path": "<optional-skill-path>", "sha256": "<64-hex>", "invocation": "<trigger>", "targets": ["codex"] },
+    "publish": { "name": "<optional-namespaced-name>", "path": "<optional-skill-path>", "sha256": "<64-hex>", "invocation": "<trigger>", "targets": ["codex"] }
   },
   "patterns": {
     "catalog": "patterns/catalog.json",
@@ -66,12 +68,16 @@ Use JSON so a schema validator can reject incomplete or misspelled declarations 
     "evidence": ["design/evidence/<evidence-file>"]
   },
   "verification": {
+    "commands": {
+      "path": "verification/commands.json",
+      "sha256": "<64-hex>"
+    },
     "skill_evals": "verification/skill-evals.json"
   }
 }
 ```
 
-The illustrative ID is not an available preset, and placeholders are not valid digests. `sha256` values are raw lowercase 64-hex digests. A cross-file validator additionally proves that skill names begin with the exact `preset_id`, each namespaced folder/frontmatter name agrees, paths stay inside the preset, all seven capabilities occur once, referenced files exist, source IDs resolve, and digests match bytes. Optional `prerequisites`, `compatibility`, and `upgrade_policy` sections may make quality and lifecycle policy more explicit without replacing the canonical fields.
+The illustrative ID is not an available preset, placeholders are not valid digests, and the illustrated optional skill rows must be omitted when unsupported. Other narrow optional skills may use additional lowercase kebab-case capability keys. `sha256` values are raw lowercase 64-hex digests. A cross-file validator additionally proves that skill names begin with the exact `preset_id`, each namespaced folder/frontmatter name agrees, paths stay inside the preset, all seven canonical capabilities occur once, every declared optional skill is covered, referenced files exist, source IDs resolve, and digests match bytes. Optional `prerequisites`, `compatibility`, and `upgrade_policy` sections may make quality and lifecycle policy more explicit without replacing the canonical fields.
 
 ## Capability and inter-layer matrix
 
@@ -94,11 +100,67 @@ Browser inputs never become raw ORM filters. `lib/db` may provide parsing, pagin
 
 ## Pattern and feature evidence
 
-The pattern catalog is executable governance, not prose inventory. Each candidate/verified record identifies `id`, layer, intent, skill owners, allowed/forbidden dependencies, `applicability.use_when`/`avoid_when`, public input/output/state contracts, exemplars, verifier, positive/negative fixtures, and digested dual-verdict evidence. Positive fixtures prove supported shapes; negative fixtures prove forbidden ownership, dependency, raw payload, authorization, and state failures are detected.
+The pattern catalog is executable governance, not prose inventory. Each candidate/verified record identifies `id`, descriptive layer, intent, exactly one `primary_owner`, zero or more unique `support_skills`, allowed/forbidden dependencies, `applicability.use_when`/`avoid_when`, public input/output/state contracts, exemplars, verifier, authoritative `verifier_argv`, positive/negative fixtures, and digested dual-verdict evidence. Owner/support references resolve to declared skills, and the primary owner cannot also appear as support. Every exemplar path, whether a file or directory tree, contains at least one substantive regular file; empty, comment-only, symlink-only, or `.gitkeep`-only examples do not qualify a candidate/verified pattern. Positive fixtures prove supported shapes. Every negative fixture also has an exact catalog `expected_failures` entry with a stable lowercase kebab-case `code` and actionable `reason`; a parser crash or rejection for a different rule does not prove the intended guard.
+
+Candidate/verified pattern evidence contains an `execution` object with `run_id`, actor, toolchain, environment, and timezone-aware `observed_at`. `pattern_contract_sha256` is SHA-256 over `preset-pattern-contract-v1\0` followed by compact, key-sorted, non-ASCII-preserving UTF-8 JSON for the complete catalog entry after removing only `evidence`; it binds intent, ownership, applicability, public contracts, dependencies, verifier invocation, and fixture declarations without circular evidence references. The execution map also binds the catalog verifier by exact path, current raw-file SHA-256, argv exactly equal to `verifier_argv`, and observed exit code `0`.
+
+The same map binds every catalog fixture, with no missing or extra paths, by exact path and current SHA-256. Positive records say `observed: "accept"`; negative records say `observed: "reject"` and carry `observed_failure` exactly equal to the catalog's expected code/reason. The evidence timestamp equals the enclosing pattern-evidence timestamp. Empty or comment-only verifier/fixture resources do not qualify. The validator checks these recorded bindings and never executes arbitrary preset code; the evidence producer runs the declared command in the bounded clean-room workflow.
+
+The binding-specific catalog and evidence fields have this shape; omitted semantic catalog fields remain required as described above:
+
+```json
+{
+  "primary_owner": "feature",
+  "support_skills": ["ui"],
+  "verifier": "patterns/verifiers/example.py",
+  "verifier_argv": ["python3", "patterns/verifiers/example.py"],
+  "fixtures": {
+    "positive": ["patterns/fixtures/example/positive/valid.json"],
+    "negative": ["patterns/fixtures/example/negative/forbidden.json"],
+    "expected_failures": {
+      "patterns/fixtures/example/negative/forbidden.json": {
+        "code": "forbidden-dependency",
+        "reason": "Rejects the declared forbidden dependency."
+      }
+    }
+  },
+  "evidence": [{ "path": "verification/evidence/example.json", "sha256": "<64-hex>" }]
+}
+```
+
+```json
+{
+  "conformance": "PASS",
+  "outcome": "PASS",
+  "qualification": "candidate",
+  "claim_type": "pattern",
+  "claim_id": "example",
+  "observed_at": "<RFC-3339>",
+  "input_digests": { "<authority>": "<64-hex>" },
+  "execution": {
+    "run_id": "pattern-example-run",
+    "actor": "<actor>",
+    "toolchain": "<toolchain>",
+    "environment": "<environment>",
+    "observed_at": "<same-RFC-3339>",
+    "pattern_contract_sha256": "<64-hex>",
+    "verifier": {
+      "path": "patterns/verifiers/example.py",
+      "sha256": "<64-hex>",
+      "argv": ["python3", "patterns/verifiers/example.py"],
+      "exit_code": 0
+    },
+    "fixtures": {
+      "positive": [{ "path": "patterns/fixtures/example/positive/valid.json", "sha256": "<64-hex>", "observed": "accept" }],
+      "negative": [{ "path": "patterns/fixtures/example/negative/forbidden.json", "sha256": "<64-hex>", "observed": "reject", "observed_failure": { "code": "forbidden-dependency", "reason": "Rejects the declared forbidden dependency." } }]
+    }
+  }
+}
+```
 
 A typical feature may require public contracts, schemas, client orchestration, server actions/queries, application services, repositories, policies, and views; do not create empty layers. Evidence must show that presentation consumes typed public/feature contracts, actions validate untrusted input and establish context, services sequence use cases and transaction intent, repositories map persistence and enforce scope, UI adapters handle typed outcomes, and `app` stays composition-only.
 
-Pattern-conformance evidence and user-outcome evidence are separate required records. A build or snapshot cannot stand in for either.
+The catalog-qualification envelope records independent `conformance` and `outcome` fields beside one shared verifier-execution map; neither field implies the other. Task and skill forward-evaluation evidence is stricter and uses distinct claim-bound files for the two axes. A build or snapshot cannot stand in for either review.
 
 ## UI design contract
 
@@ -129,6 +191,12 @@ Visual evidence should include representative viewport/state captures plus objec
 
 Missing hard sources block affected implementation. Missing quality sources use the manifest fallback and lower the confidence/status claim.
 
+## Verification command registry
+
+`verification.commands` is a digested file reference to a registry conforming to [`verification-command-registry.schema.json`](../blueprint/schemas/verification-command-registry.schema.json). The registry always declares `install`, `doctor`, `test`, `check`, `build`, and `start-smoke`; it may add capability-selected lanes such as `generate`, guarded `data-reset`, `auth-smoke`, `browser-smoke`, or an isolated `restore-drill`. Exact lane keys `publish`, `release`, and `deploy` are forbidden because real external mutation never belongs in clean-room qualification; only a separately named `*-simulate` lane for a non-mutating check against an isolated local target may be declared. This name check is defense in depth, not semantic proof: the runner/reviewer must inspect argv and prove the target is isolated and no external production effect occurred. A lane stores argv as an array, an optional portable working directory, required environment-variable names, and an optional timeout. The working directory defaults to `.`; any other value resolves inside the preset and must already be a real directory, not a missing path, file, or symlink traversal. `start-smoke` must declare a positive `timeout_seconds` so a successful start cannot leave an unbounded process. A lane does not replace argv with a free-form command field or store secret values.
+
+Clean-room evidence records the lane, exact argv/cwd observed, and exit code. The `start-smoke` record additionally requires `readiness_observed: true` and `termination_observed: true`; exit zero without both observations is not a smoke proof. Candidate/verified acceptance requires successful evidence for every declared lane, including capability-selected additions beyond the six schema-required lanes. The validator compares evidence to the locked registry, so checking that a script exists, running a different command, leaving an optional lane unexecuted, changing the registry without refreshing evidence, or relabeling a real mutation as clean-room proof cannot qualify the preset.
+
 ## Materialization and verification
 
 `materialization` identifies the complete template root or explicit entries. Detailed entries declare source, target, `create`/`merge`/`replace`, conflict policy, and SHA-256. Instantiation must:
@@ -148,15 +216,21 @@ Manifest paths are canonical cross-platform POSIX-relative paths: no backslashes
 
 ## Candidate and verified evidence envelope
 
-`candidate` and `verified` require `upgrade_policy`, object-form capability/flow matrices, digested references for skill evals, integrity, design evidence, and clean-room evidence. Each verified capability names nonempty providers, consumers, payloads, states, constraints, and catalog pattern IDs; each verified flow carries `capability_id`, and every verified capability has at least one mapped flow. Each forward-eval case binds the current template, pattern, source, design, and seven skill digests, records its route trace, and stores distinct `conformance` and `outcome` evidence; the suite must cover all seven canonical skills. Every dual-verdict record binds `claim_type`, `claim_id`, exact non-circular input digests, qualification, and freshness, so one generic result cannot prove unrelated patterns, capabilities, flows, or eval cases.
+Every forward-eval case at every status supplies its untouched prompt, current input digests, route trace, separate verdict objects, and distinct claim-bound evidence paths. Only two `PASS` axes count as skill/kind coverage; stubs, stale/misbound records, shared paths, and non-pass results do not. `candidate` and `verified` additionally require `upgrade_policy`, object-form capability/flow matrices, digested references for commands, skill evals, integrity, design evidence, and clean-room evidence. Each verified capability names nonempty providers, consumers, payloads, states, constraints, and catalog pattern IDs; each verified flow carries `capability_id`, and every verified capability has at least one mapped flow. Each forward-eval case binds the current template, command, pattern, source, design, and every declared skill digest. A verdict-specific record contains one `result`, `claim_type`, `claim_id`, and `case_input_sha256`; use only `PASS`, `FAIL`, `BLOCKED`, or `NOT_EXECUTED`. The suite covers every declared skill. Optional `audit-changes` requires `audit-immutable-range` and `audit-checkpoint` negative cases; optional `publish` requires `publish-topology`, `publish-conflict`, and `publish-final-revision` negative cases. Each such case must reference the corresponding skill.
 
-Status evidence contains `result: "pass"`, `qualification` equal to the exact status, an explicit context (`ui-review`, `clean-room`, or `independent-use`), `run_id`, actor, toolchain, environment, timezone-aware RFC 3339 `observed_at` within `stale_after_days`, and the exact current `input_digests` map. Clean-room and independent-use evidence also contain nonempty zero-exit command records. `verified` requires a distinct independent-use path and run ID whose `independent_from_run_id` names a clean-room run, so candidate evidence cannot be relabeled or self-declared independent without a new run.
+`case_input_sha256` is SHA-256 over the UTF-8 bytes `preset-skill-eval-case-v1\0` followed by compact, key-sorted, non-ASCII-preserving JSON containing exactly `id`, `kind`, `skills`, `prompt`, `route_trace`, authority `input_digests`, and the optional `adversarial_input`, `expected_disposition`, and `expected_failure_code` keys (`null` when absent). It excludes conformance/outcome objects and all verdict evidence references, so there is no self-reference. Both axis records bind this same digest. Mutating a prompt, skill route, case kind/ID, authority input, or adversarial expectation invalidates both records even when their file references and global input maps still exist.
 
-The status-evidence input map binds `manifest_inputs`, `template`, `patterns`, `sources`, `design`, `skill_evals`, and `skill:<capability>` for all seven canonical skills. `manifest_inputs` is SHA-256 over compact, key-sorted UTF-8 JSON for `preset.json` after removing only design/status-evidence references; this binds status, preset/blueprint identity, stack, capabilities, materialization, and freshness policy without a self-reference. `template` uses the length-prefixed tree record format from the skill contract under domain `preset-template-tree-v1`.
+Every standardized `audit-changes` or `publish` negative case must supply a substantive adversarial input as a `{path, sha256}` reference, an expected disposition from `BLOCKED`, `REFUSED`, or `TASK_REROUTED`, and a lowercase kebab-case expected failure code. Both axis evidence records report matching `observed_disposition` and `observed_failure_code`. A happy-path input carrying only the required kind label, a drifted fixture digest, or a mismatched observed failure does not count as negative coverage.
+
+Status evidence contains `result: "pass"`, `qualification` equal to the exact status, an explicit context (`ui-review`, `clean-room`, or `independent-use`), `run_id`, actor, toolchain, environment, timezone-aware RFC 3339 `observed_at` within `stale_after_days`, and the exact current `input_digests` map. Clean-room and independent-use evidence also contain nonempty zero-exit records bound by lane and exact argv/cwd to the command registry. `verified` requires a distinct independent-use path and run ID whose `independent_from_run_id` names a clean-room run, so candidate evidence cannot be relabeled or self-declared independent without a new run.
+
+The status-evidence input map binds `manifest_inputs`, `template`, `commands`, `patterns`, `sources`, `design`, `skill_evals`, and `skill:<capability>` for every declared skill. `manifest_inputs` is SHA-256 over compact, key-sorted UTF-8 JSON for `preset.json` after removing only design/status-evidence references; this binds status, preset/blueprint identity, stack, capabilities, materialization, command registry and freshness policy without a self-reference. `template` uses the length-prefixed tree record format from the skill contract under domain `preset-template-tree-v1`.
 
 `verification/integrity.json` declares a passing `sha256` result, timezone-aware `generated_at`, and POSIX byte-sorted `{path, sha256}` records. It covers every regular preset file except `preset.json` and itself, rejects symbolic links, stale bytes, duplicates, and missing/extra records, and is itself locked from the manifest. This graph proves package closure; the named input map proves that the recorded tests apply to the exact manifest identity and inputs.
 
 ## Freshness and upgrades
+
+Manifest schema `1.1.0` adds the required digested command registry and standardized optional skill/eval contracts. A `1.0.0` manifest must add the six baseline command lanes, refresh its input/integrity graph, and rerun affected clean-room and forward-evaluation evidence before it can be accepted under this contract.
 
 Skill records lock their complete directories with the deterministic tree-digest algorithm defined by [`AI-GUIDE-CONTRACT.md`](AI-GUIDE-CONTRACT.md). `patterns.sha256` applies the same record format to the complete pattern directory under domain `preset-pattern-tree-v1`; `sources` and `design` lock their declared files with raw SHA-256. Evidence is stale when its exact input map changes, its freshness window expires, an invalidation trigger fires, an exact dependency/source changes, or a verifier gains relevant coverage.
 

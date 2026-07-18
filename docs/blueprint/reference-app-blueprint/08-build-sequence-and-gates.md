@@ -64,7 +64,7 @@ Guide [10](10-preset-authoring-and-instantiation.md) declares the operating mode
 2. **Contract:** complete `PRESET-*` plus data/shared/platform/feature/route mappings for every provided flow.
 3. **Foundation:** author framework-root template files, `template/src` roles and only the shared/data/auth/app mechanics selected by the contract.
 4. **Walking slices:** implement the smallest removable feature path proving each capability labeled `verified`.
-5. **Agent skills:** complete the seven manifest-routed skill packages from guide [11](11-preset-agent-skills-and-design-evidence.md); validate triggers, paths, resources, pattern references, commands and integrity against code.
+5. **Agent skills:** complete the seven canonical manifest-routed skill packages plus every declared optional package from guide [11](11-preset-agent-skills-and-design-evidence.md); validate triggers, paths, resources, pattern references, commands, forward evaluations and integrity against code.
 6. **Clean room:** materialize into an empty temporary repository, install the exact lock set and run selected database/auth/lint/typecheck/test/build/browser gates plus clean-context skill forward evaluations.
 7. **Publish:** capture evidence/source digests, version manifest/template/skills/patterns together and supersede the prior contract explicitly.
 

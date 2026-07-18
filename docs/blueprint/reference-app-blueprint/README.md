@@ -148,7 +148,7 @@ Read only the required row, plus the next unresolved owner.
 
 ## Completion contract
 
-An authored web preset is complete only when its manifest, template, contract, pattern catalog, source ledger and seven namespaced skill packages agree by digest; clean-room materialization and clean-context skill forward evaluations pass both pattern-conformance and requested-outcome gates; and every `verified` capability closes its exact-version inter-layer walking slice. `provided`, `conditional` and `unsupported` remain explicit. Preset acceptance is not application production readiness.
+An authored web preset is complete only when its manifest, template, contract, pattern catalog, source ledger, seven canonical namespaced skill packages and every declared optional package agree by digest; clean-room materialization and clean-context forward evaluations for every declared skill pass both pattern-conformance and requested-outcome gates; and every `verified` capability closes its exact-version inter-layer walking slice. `provided`, `conditional` and `unsupported` remain explicit. Preset acceptance is not application production readiness.
 
 A reference application is complete only when:
 

@@ -15,6 +15,7 @@ owns:
   - native-platform-first UI/runtime policy
   - server/client/rendering path selection
   - accessibility baseline
+  - user-visible state and action evidence
   - performance and capacity budgets
   - cache/waterfall and measurement gates
 ---
@@ -91,6 +92,14 @@ Require:
 
 Automated a11y checks catch a subset. Critical workflows require keyboard/screen-reader-oriented interaction evidence proportional to risk.
 
+## Rule `UI-STATE-EVIDENCE-01`: every selected surface has explicit state and action behavior
+
+Map loading, empty, error, stale, denied, and success states for each critical surface. Distinguish absence from denied access and dependency failure; show retained stale data only with freshness and action policy; keep retry, navigation, and recovery paths usable. Define focus placement/restoration, keyboard order, announcements, and responsive behavior for each state that changes structure.
+
+For mutations, define draft, pending, success, validation failure, conflict, and unknown/ambiguous result behavior. While pending, prevent accidental duplicate intent through the interaction contract and preserve the submitted context; server-side idempotency/concurrency rules still own duplicate business effects. After completion, restore focus or navigate deliberately, expose safe errors, and reconcile cached or stale views only after committed success.
+
+Evidence exercises representative viewports and input modes, slow and failed reads, denied versus empty data, stale refresh, validation/server failure, rapid repeated activation/double submit, success, retry, and focus after structural change. A component snapshot or happy-path render alone does not prove the interaction contract.
+
 ## Rule `PERF-BUDGET-01`: budgets belong to critical journeys
 
 For each important journey, record:
@@ -150,6 +159,7 @@ Load tests use safe environments/data and test the bottleneck actually owned by 
 | Higher capacity | Load shape, saturation point, error/latency curve, and recovery |
 | Better cache | Hit/refetch/staleness/invalidation evidence with correct security scope |
 | Better accessibility | Automated scan plus relevant keyboard/assistive interaction evidence |
+| Complete UI behavior | State matrix plus slow/failure, focus, responsive, and pending/double-submit interaction evidence |
 
 Record baseline, change, same-condition result, functional regression checks, and trade-off. A passing build is not performance evidence.
 

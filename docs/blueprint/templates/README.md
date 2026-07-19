@@ -118,7 +118,7 @@ The stable ID, not the directory, is identity. Register every active/superseded 
 | [test-strategy.md](test-strategy.md) | Risk-to-test and architecture-fitness mapping |
 | [slo-runbook.md](slo-runbook.md) | Critical-journey objectives and operational response |
 | [release-recovery.md](release-recovery.md) | Release, compatibility, rollout, and recovery gates |
-| [refactor-slice.md](refactor-slice.md) | Characterized seam through cutover/deletion |
+| [refactor-slice.md](refactor-slice.md) | Frozen baseline, candidate disposition, behavior/effect equivalence, checker coverage, and cutover/deletion |
 
 Filled, non-authoritative examples:
 

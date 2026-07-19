@@ -72,6 +72,10 @@ Public contracts must:
 
 An index/barrel is not sufficient by itself. Enforce no-deep-import rules with language/package tooling where possible. Internal helpers, domain entities, repositories, and adapter clients are private by default.
 
+A module may expose a small number of intentional capability-, consumer-class-, or runtime-scoped public sub-surfaces when that reduces transitive dependency closure. A broad facade may remain for composition or temporary compatibility, while new cross-module consumers use the narrowest sufficient public surface. Prefer direct named contracts where the stack supports them; wildcard and re-export chains must not silently expand consumer authority or dependency reach. A public sub-surface is still an owned, compatible contract—not permission to import an internal path—and a wrapper per caller that only renames the same contract adds no useful boundary.
+
+Architecture fitness should resolve the supported import and re-export graph, detect direct and indirect cycles, and prevent broad compatibility surfaces from becoming the default cross-module dependency. Apply [`FITNESS-CHECK-PROOF-01`](14-testing-and-architecture-fitness.md#rule-fitness-check-proof-01-architecture-checkers-prove-that-they-can-fail) so the claim is limited to the syntax, resolver, roots, and generated/dynamic behavior the checker actually covers.
+
 External HTTP/RPC/event versioning is separate from internal module organization. Do not version every internal function preemptively.
 
 ## Rule `MODULE-APPLICATION-01`: application owns use cases
@@ -156,6 +160,8 @@ It owns:
 It does not own domain invariants, persistence queries, cross-module transactions, or trusted authorization merely because a control is hidden.
 
 Keep entrypoints thin. A worker, webhook, UI action, and HTTP endpoint may call the same application command without duplicating policy.
+
+When a presentation entry coordinates several interaction states or effects, it may delegate presentation-state sequencing to a module-owned coordinator/workflow and rendering to cohesive sections. This is an optional logical seam, not a required controller, hook, class, or directory. Extract it for cohesion, dependency direction, change cadence, and testability—not file length alone. Sections must not bypass public application contracts, deep-import adapters/repositories, or acquire authorization/product policy; where read orchestration occurs remains a selected stack/pattern decision. The coordinator does not absorb business transitions, transactions, idempotency, or retry decisions from application/domain owners.
 
 ## Rule `MODULE-OPTIONAL-01`: add layers only when behavior needs them
 

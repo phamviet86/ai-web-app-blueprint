@@ -140,7 +140,7 @@ Acceptance:
 - persistence migration and local test data are reproducible;
 - one representative trace/log correlation can be followed;
 - transport and persistence boundaries preserve meaningful `false`, `null`, `0`, and omitted values, real identifier shapes, timezone behavior, and declared defaults;
-- modules intended for analysis/test discovery import without opening a data/network connection or demanding runtime-only secrets before the owning operation starts;
+- modules intended for analysis/test discovery satisfy [`RUNTIME-INITIALIZATION-01`](03-shared-kernel-and-platform.md#rule-runtime-initialization-01-importing-code-does-not-start-the-runtime); when build/check claims no external dependency, evidence runs with runtime-only secrets absent and relevant endpoints unreachable and proves no eager connection attempt;
 - unit/integration/contract checks cover the actual failure risks;
 - required command lanes, production build, bounded startup smoke, and CI pass in a clean environment.
 

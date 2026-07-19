@@ -26,7 +26,7 @@
     "$schema": { "type": "string", "minLength": 1 },
     "schema_version": { "const": "1.0.0" },
     "profile_id": { "$ref": "#/$defs/kebabId" },
-    "blueprint_version": { "const": "0.12.0" },
+    "blueprint_version": { "const": "0.13.0" },
     "blueprint_revision": { "$ref": "#/$defs/contentRevision" },
     "source_revision": { "$ref": "#/$defs/sourceRevision" },
     "artifact_registry": {

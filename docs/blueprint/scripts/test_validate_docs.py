@@ -28,6 +28,82 @@ depends_on: []
 Use `TEST-RULE-01`.
 """
 
+REFACTOR_TEMPLATE = """---
+template_id: TEST-REFACTOR-TEMPLATE
+template_version: 1.1.0
+produces: refactor-plan
+owner_guide: 01-test.md
+use_when: Testing refactor-plan contracts.
+---
+
+# Refactor template
+"""
+
+
+def refactor_plan(
+    *,
+    omit: str | None = None,
+    empty: str | None = None,
+    header_only: str | None = None,
+    without_separator: str | None = None,
+    fenced_only: str | None = None,
+) -> str:
+    sections = {
+        "Frozen boundary and authorized delta": """| Boundary group | Baseline | Authorized delta | Final proof | Owner |
+| --- | --- | --- | --- | --- |
+| Public contract | revision-a | None | immutable diff passed | architecture-team |""",
+        "Candidate disposition": """| Finding | Disposition | Rationale | Evidence | Owner |
+| --- | --- | --- | --- | --- |
+| No candidate in scope | N/A | Focused seam only | `check-a \\| check-b` reviewed | architecture-team |""",
+        "Characterization": "Observable success, failure, authorization, and effect behavior is recorded.",
+        "Behavior-equivalence matrix": """| Axis | Baseline | Target | Evidence | Owner |
+| --- | --- | --- | --- | --- |
+| Callable contract | preserved-shape | compatible-shape | contract suite passed | architecture-team |""",
+        "Checker coverage": "Analyzed roots, supported forms, exclusions, and positive/negative fixtures are recorded.",
+        "Transition": "The selected seam, migration batches, ratchet, and abort threshold are explicit.",
+        "Cutover and deletion": "Consumer, recovery, and candidate-closure proof gate deletion.",
+    }
+    body = []
+    for heading, content in sections.items():
+        if heading == omit:
+            continue
+        if heading == header_only:
+            content = "Instructions remain copied from the template.\n\n" + "\n".join(
+                content.splitlines()[:2]
+            )
+        if heading == without_separator:
+            rows = content.splitlines()
+            content = "\n".join((rows[0], rows[2]))
+        if heading == fenced_only:
+            content = (
+                "Instructions remain copied from the template.\n\n```text\n"
+                + content
+                + "\n```"
+            )
+        body.append(f"## {heading}\n\n{'' if heading == empty else content}")
+    return """---
+artifact_id: REF-EXAMPLE-01
+artifact_type: refactor-plan
+schema_version: 1.0
+artifact_version: 1
+title: Approved refactor slice
+status: approved
+owner: architecture-team
+created_at: 2026-07-19
+updated_at: 2026-07-19
+scope:
+  - system:test
+source_template: template.md
+supersedes: []
+superseded_by: null
+review_by: null
+expires_at: null
+---
+
+# Approved refactor slice
+
+""" + "\n\n".join(body) + "\n"
+
 
 class ValidatorTests(unittest.TestCase):
     def validate(self, files: dict[str, str]):
@@ -41,6 +117,221 @@ class ValidatorTests(unittest.TestCase):
 
     def test_accepts_minimal_valid_guide(self):
         self.assertEqual(self.validate({"01-test.md": GUIDE}), [])
+
+    def test_accepts_complete_effective_refactor_plan(self):
+        self.assertEqual(
+            self.validate(
+                {
+                    "01-test.md": GUIDE,
+                    "template.md": REFACTOR_TEMPLATE,
+                    "refactor.md": refactor_plan(),
+                }
+            ),
+            [],
+        )
+
+    def test_draft_refactor_plan_may_defer_contract_sections(self):
+        draft = refactor_plan(omit="Frozen boundary and authorized delta").replace(
+            "status: approved", "status: draft"
+        )
+        self.assertEqual(
+            self.validate(
+                {
+                    "01-test.md": GUIDE,
+                    "template.md": REFACTOR_TEMPLATE,
+                    "refactor.md": draft,
+                }
+            ),
+            [],
+        )
+
+    def test_rejects_missing_or_empty_refactor_contract_sections(self):
+        headings = (
+            "Frozen boundary and authorized delta",
+            "Candidate disposition",
+            "Behavior-equivalence matrix",
+            "Checker coverage",
+        )
+        for heading in headings:
+            with self.subTest(heading=heading, state="missing"):
+                findings = self.validate(
+                    {
+                        "01-test.md": GUIDE,
+                        "template.md": REFACTOR_TEMPLATE,
+                        "refactor.md": refactor_plan(omit=heading),
+                    }
+                )
+                self.assertTrue(
+                    any(
+                        f"requires '## {heading}'" in finding.message
+                        for finding in findings
+                    )
+                )
+            with self.subTest(heading=heading, state="empty"):
+                findings = self.validate(
+                    {
+                        "01-test.md": GUIDE,
+                        "template.md": REFACTOR_TEMPLATE,
+                        "refactor.md": refactor_plan(empty=heading),
+                    }
+                )
+                self.assertTrue(
+                    any(
+                        f"has an empty '## {heading}' section" in finding.message
+                        for finding in findings
+                    )
+                )
+
+    def test_rejects_copied_but_unfilled_refactor_data_tables(self):
+        for heading in (
+            "Frozen boundary and authorized delta",
+            "Candidate disposition",
+            "Behavior-equivalence matrix",
+        ):
+            with self.subTest(heading=heading):
+                findings = self.validate(
+                    {
+                        "01-test.md": GUIDE,
+                        "template.md": REFACTOR_TEMPLATE,
+                        "refactor.md": refactor_plan(header_only=heading),
+                    }
+                )
+                self.assertTrue(
+                    any(
+                        f"requires a populated data row in '## {heading}'"
+                        in finding.message
+                        for finding in findings
+                    )
+                )
+
+    def test_rejects_refactor_data_table_without_separator(self):
+        heading = "Candidate disposition"
+        findings = self.validate(
+            {
+                "01-test.md": GUIDE,
+                "template.md": REFACTOR_TEMPLATE,
+                "refactor.md": refactor_plan(without_separator=heading),
+            }
+        )
+        self.assertTrue(
+            any(
+                f"requires a populated data row in '## {heading}'" in finding.message
+                for finding in findings
+            )
+        )
+
+    def test_rejects_refactor_data_table_inside_fenced_example(self):
+        heading = "Candidate disposition"
+        findings = self.validate(
+            {
+                "01-test.md": GUIDE,
+                "template.md": REFACTOR_TEMPLATE,
+                "refactor.md": refactor_plan(fenced_only=heading),
+            }
+        )
+        self.assertTrue(
+            any(
+                f"requires a populated data row in '## {heading}'" in finding.message
+                for finding in findings
+            )
+        )
+
+    def test_rejects_required_refactor_section_inside_fenced_example(self):
+        heading = "Candidate disposition"
+        artifact = refactor_plan(omit=heading).replace(
+            "## Characterization",
+            """```markdown
+## Candidate disposition
+
+| Finding | Disposition | Rationale | Evidence | Owner |
+| --- | --- | --- | --- | --- |
+| Candidate | REFACTOR_CONFIRMED | Same behavior | Tests pass | architecture-team |
+```
+
+## Characterization""",
+        )
+        findings = self.validate(
+            {
+                "01-test.md": GUIDE,
+                "template.md": REFACTOR_TEMPLATE,
+                "refactor.md": artifact,
+            }
+        )
+        self.assertTrue(
+            any(f"requires '## {heading}'" in finding.message for finding in findings)
+        )
+
+    def test_fence_with_trailing_text_cannot_expose_fake_refactor_section(self):
+        heading = "Candidate disposition"
+        artifact = refactor_plan(omit=heading).replace(
+            "## Characterization",
+            """````markdown
+````not-a-close
+## Candidate disposition
+
+| Finding | Disposition | Rationale | Evidence | Owner |
+| --- | --- | --- | --- | --- |
+| Candidate | REFACTOR_CONFIRMED | Same behavior | Tests pass | architecture-team |
+````still-not-a-close
+````
+
+## Characterization""",
+        )
+        findings = self.validate(
+            {
+                "01-test.md": GUIDE,
+                "template.md": REFACTOR_TEMPLATE,
+                "refactor.md": artifact,
+            }
+        )
+        self.assertTrue(
+            any(f"requires '## {heading}'" in finding.message for finding in findings)
+        )
+
+    def test_html_comment_cannot_expose_fake_refactor_section(self):
+        heading = "Candidate disposition"
+        artifact = refactor_plan(omit=heading).replace(
+            "## Characterization",
+            """<!--
+## Candidate disposition
+
+| Finding | Disposition | Rationale | Evidence | Owner |
+| --- | --- | --- | --- | --- |
+| Candidate | REFACTOR_CONFIRMED | Same behavior | Tests pass | architecture-team |
+-->
+
+## Characterization""",
+        )
+        findings = self.validate(
+            {
+                "01-test.md": GUIDE,
+                "template.md": REFACTOR_TEMPLATE,
+                "refactor.md": artifact,
+            }
+        )
+        self.assertTrue(
+            any(f"requires '## {heading}'" in finding.message for finding in findings)
+        )
+
+    def test_rejects_fenced_only_refactor_section_substance(self):
+        heading = "Checker coverage"
+        artifact = refactor_plan().replace(
+            "## Checker coverage\n\nAnalyzed roots, supported forms, exclusions, and positive/negative fixtures are recorded.",
+            "## Checker coverage\n\n```text\nExample coverage only.\n```",
+        )
+        findings = self.validate(
+            {
+                "01-test.md": GUIDE,
+                "template.md": REFACTOR_TEMPLATE,
+                "refactor.md": artifact,
+            }
+        )
+        self.assertTrue(
+            any(
+                f"has an empty '## {heading}' section" in finding.message
+                for finding in findings
+            )
+        )
 
     def test_requires_evidence_manifest_schema(self):
         with tempfile.TemporaryDirectory() as temporary:

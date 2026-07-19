@@ -18,7 +18,7 @@ An app-profile pattern catalog contains established records only. Each entry bin
 
 ## Evidence identity and freshness
 
-`blueprint_revision`, `source_revision`, guidance `current_revision`, and both CLI expectations use a full 40/64-hex content identity or `sha256:<64-hex>`; branch, tag, release and `latest`-style selectors never qualify. `--expected-revision` must equal the source revision, `--expected-blueprint-revision` must equal the selected blueprint revision, and `blueprint_version` is exactly `0.12.0`. A required `freshness_policy.stale_after_days` from 1 through 365 applies to clean-room, pattern, guidance and skill-axis evidence; expired or future evidence fails.
+`blueprint_revision`, `source_revision`, guidance `current_revision`, and both CLI expectations use a full 40/64-hex content identity or `sha256:<64-hex>`; branch, tag, release and `latest`-style selectors never qualify. `--expected-revision` must equal the source revision, `--expected-blueprint-revision` must equal the selected blueprint revision, and `blueprint_version` is exactly `0.13.0`. A required `freshness_policy.stale_after_days` from 1 through 365 applies to clean-room, pattern, guidance and skill-axis evidence; expired or future evidence fails.
 
 Canonical app-profile digests hash `ASCII domain + NUL + compact key-sorted, non-ASCII-preserving UTF-8 JSON`:
 

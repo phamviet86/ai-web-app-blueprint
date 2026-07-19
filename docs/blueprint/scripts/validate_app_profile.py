@@ -35,7 +35,7 @@ RFC3339 = re.compile(
 )
 
 SCHEMA_VERSION = "1.0.0"
-BLUEPRINT_VERSION = "0.12.0"
+BLUEPRINT_VERSION = "0.13.0"
 FUTURE_CLOCK_SKEW = timedelta(minutes=5)
 REQUIRED_SKILLS = {
     "analyze-request",

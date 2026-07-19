@@ -3,7 +3,7 @@ guide_id: SKEL-ROUTER
 title: Production Repository Blueprint Adoption Router
 status: experimental
 audience: human-and-ai
-package_version: 0.12.0
+package_version: 0.13.0
 control_catalog_version: 1.0.0
 artifact_schema_version: "1.0"
 purpose: Route humans and AI agents through a stack-neutral production blueprint with optional implementation profiles.
@@ -41,7 +41,7 @@ The core is stack-neutral. A file under `profiles/` maps core roles to a concret
 
 | Contract | Current declaration |
 | --- | --- |
-| Package version/maturity | `0.12.0` / `experimental` |
+| Package version/maturity | `0.13.0` / `experimental` |
 | Control catalog | `1.0.0` in guide `08` |
 | Artifact schema | `1.0` in [templates/README.md](templates/README.md) |
 | Structural validation | `python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .` |
@@ -127,7 +127,7 @@ For an existing repo, preserve observable behavior and data safety unless change
 | [templates/test-strategy.md](templates/test-strategy.md) | Risk-to-test mapping and architecture fitness registry |
 | [templates/slo-runbook.md](templates/slo-runbook.md) | Critical-journey SLI/SLO, alerts and mitigation |
 | [templates/release-recovery.md](templates/release-recovery.md) | Artifact, rollout, compatibility and recovery gates |
-| [templates/refactor-slice.md](templates/refactor-slice.md) | One characterized brownfield seam through decommission |
+| [templates/refactor-slice.md](templates/refactor-slice.md) | One frozen and characterized brownfield seam with candidate/checker closure through decommission |
 
 Frontmatter `depends_on` identifies rule owners for just-in-time lookup; it does not trigger transitive preload. The task router's **Required reads** column is the only automatic bundle.
 
@@ -226,7 +226,7 @@ Mode additions:
 
 ## Evidence basis
 
-The quality model is informed by current primary sources including [OWASP ASVS 5.0](https://owasp.org/www-project-application-security-verification-standard/), [NIST SSDF 1.1](https://csrc.nist.gov/projects/ssdf), [WCAG 2.2](https://www.w3.org/TR/WCAG22/), [SLSA 1.2](https://slsa.dev/spec/v1.2/), [OpenTelemetry](https://opentelemetry.io/docs/concepts/signals/), and official framework/library documentation. The revision-bound [Bingo LMS lesson record](evidence/bingo-lms-repository-lessons.md) supplies one real-app repository friction source for portable rules, not stack authority or readiness proof. These sources define verification baselines, not a universal enterprise ceremony; the system profile selects proportionate controls.
+The quality model is informed by current primary sources including [OWASP ASVS 5.0](https://owasp.org/www-project-application-security-verification-standard/), [NIST SSDF 1.1](https://csrc.nist.gov/projects/ssdf), [WCAG 2.2](https://www.w3.org/TR/WCAG22/), [SLSA 1.2](https://slsa.dev/spec/v1.2/), [OpenTelemetry](https://opentelemetry.io/docs/concepts/signals/), and official framework/library documentation. The revision-bound [Bingo LMS repository lesson record](evidence/bingo-lms-repository-lessons.md) and [repository-wide refactor lesson record](evidence/bingo-lms-refactor-lessons-2026-07-19.md) supply two observations from one real-app repository for portable rules, not stack authority, an independent pilot, or readiness proof. These sources define verification baselines, not a universal enterprise ceremony; the system profile selects proportionate controls.
 
 ## When not to use this package
 

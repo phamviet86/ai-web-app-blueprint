@@ -17,6 +17,7 @@ owns:
   - promotion rules
   - platform ownership
   - composition-root ownership
+  - runtime initialization and import/build isolation
   - configuration and secret boundary
 ---
 
@@ -86,6 +87,8 @@ Promotion requires all of:
 
 Multiple consumers are useful evidence, not an automatic rule. App-wide concerns may begin shared; two consumers with different meanings should remain separate.
 
+Promotion evidence compares complete lifecycle semantics, including success, failure and thrown-error handling; meaningful `false`, `null`, zero, empty and omitted values; callback/effect ordering; and reset/close timing when observable. Similar syntax with different authorization, labels, fields, messages, actions, or lifecycle policy remains module-owned. Candidate classification and closure follow [`REFACTOR-CANDIDATE-01`](16-refactor-and-evolution.md#rule-refactor-candidate-01-metrics-nominate-candidates-not-solutions) during brownfield work.
+
 ## Rule `PLATFORM-BOUNDARY-01`: platform owns mechanisms, not product policy
 
 Platform code initializes and operates technical capabilities shared by entrypoints or adapters:
@@ -116,6 +119,12 @@ test root      -> application modules + controlled adapters
 The root owns construction order, dependency lifetimes, startup validation, and graceful shutdown. It contains no business workflow.
 
 Prefer explicit factories/constructor parameters. A dependency-injection container is optional; hidden runtime lookup from arbitrary modules is not.
+
+## Rule `RUNTIME-INITIALIZATION-01`: importing code does not start the runtime
+
+Import, static analysis, and test discovery of reusable modules must not open data/network connections, schedule work, mutate external state, construct effectful clients or clients requiring runtime secrets/I/O, or demand runtime-only secrets. Inert factories and configuration values are allowed. Initialize runtime mechanisms at the owning operation or executable composition root, where startup validation, dependency lifetime, and shutdown are explicit.
+
+Declare an artifact-build dependency separately from a runtime-only dependency. A claim that `check` or `build` is independent of an external service is proven with runtime-only secrets absent and relevant endpoints unreachable, while also verifying that no connection attempt occurred. A successful build while live services are reachable proves no such independence. A legitimate build-time dependency names its owner, purpose, isolated source, secret boundary, failure behavior, and reproducible evidence. Apply the execution-based negative proof in [`TEST-SEAM-01`](14-testing-and-architecture-fitness.md#rule-test-seam-01-design-controllable-boundaries); apply [`FITNESS-CHECK-PROOF-01`](14-testing-and-architecture-fitness.md#rule-fitness-check-proof-01-architecture-checkers-prove-that-they-can-fail) when a static checker enforces this invariant.
 
 ## Rule `CONFIG-BOUNDARY-01`: configuration has one validated boundary
 

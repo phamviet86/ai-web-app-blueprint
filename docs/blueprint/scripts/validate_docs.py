@@ -94,7 +94,15 @@ EFFECTIVE_ARTIFACT_REQUIRED_HEADINGS = {
     ),
     "migration-plan": ("Phases", "Backfill contract", "Production migration safety", "Recovery"),
     "release-plan": ("Gates", "Infrastructure evidence", "Rollout", "Recovery"),
-    "refactor-plan": ("Characterization", "Transition", "Cutover and deletion"),
+    "refactor-plan": (
+        "Frozen boundary and authorized delta",
+        "Candidate disposition",
+        "Characterization",
+        "Behavior-equivalence matrix",
+        "Checker coverage",
+        "Transition",
+        "Cutover and deletion",
+    ),
     "artifact-registry": ("Current and historical artifacts", "Registry invariants", "Registry review"),
     "exception-ledger": ("Ledger", "Ledger invariants", "Review record"),
     "stack-profile": (
@@ -138,6 +146,13 @@ EFFECTIVE_ARTIFACT_REQUIRED_TOKENS = {
     "route-map": ("CAP-", "JRN-"),
     "reference-app-plan": ("CAP-", "CTL-", "GATE-", "EVID-"),
     "preset-contract": ("PRESET-", "EVID-"),
+}
+EFFECTIVE_ARTIFACT_REQUIRED_DATA_TABLES = {
+    "refactor-plan": (
+        "Frozen boundary and authorized delta",
+        "Candidate disposition",
+        "Behavior-equivalence matrix",
+    ),
 }
 AUDIENCES = {"ai-agent", "human", "human-and-ai"}
 EXAMPLE_STATUSES = {"experimental", "candidate", "stable", "deprecated", "example"}
@@ -272,10 +287,66 @@ def require_fields(document: Document, fields: tuple[str, ...]) -> list[Finding]
     return findings
 
 
+def mask_nonrendered_lines(lines: list[str]) -> list[str | None]:
+    masked: list[str | None] = []
+    fence_character: str | None = None
+    fence_length = 0
+    in_html_comment = False
+
+    def remove_html_comments(line: str) -> str:
+        nonlocal in_html_comment
+        visible: list[str] = []
+        position = 0
+        while position < len(line):
+            if in_html_comment:
+                end = line.find("-->", position)
+                if end < 0:
+                    return "".join(visible)
+                in_html_comment = False
+                position = end + 3
+                continue
+            start = line.find("<!--", position)
+            if start < 0:
+                visible.append(line[position:])
+                break
+            visible.append(line[position:start])
+            in_html_comment = True
+            position = start + 4
+        return "".join(visible)
+
+    for raw_line in lines:
+        if fence_character is not None:
+            fence = FENCE_PATTERN.match(raw_line)
+            if fence:
+                marker = fence.group("marker")
+                if (
+                    marker[0] == fence_character
+                    and len(marker) >= fence_length
+                    and not raw_line[fence.end() :].strip()
+                ):
+                    fence_character = None
+                    fence_length = 0
+            masked.append(None)
+            continue
+
+        line = remove_html_comments(raw_line)
+        fence = FENCE_PATTERN.match(line)
+        if fence:
+            marker = fence.group("marker")
+            fence_character = marker[0]
+            fence_length = len(marker)
+            masked.append(None)
+            continue
+        masked.append(line if line.strip() else None)
+    return masked
+
+
 def markdown_section(document: Document, title: str) -> tuple[int, list[str]] | None:
     heading = re.compile(r"^##\s+" + re.escape(title) + r"\s*#*$", re.IGNORECASE)
     start: int | None = None
-    for index, line in enumerate(document.lines):
+    for index, line in enumerate(mask_nonrendered_lines(document.lines)):
+        if line is None:
+            continue
         if start is None:
             if heading.match(line):
                 start = index
@@ -288,7 +359,11 @@ def markdown_section(document: Document, title: str) -> tuple[int, list[str]] | 
 
 
 def section_has_substance(lines: list[str]) -> bool:
-    meaningful = [line.strip() for line in lines if line.strip()]
+    meaningful = [
+        line.strip()
+        for line in mask_nonrendered_lines(lines)
+        if line is not None and line.strip()
+    ]
     if not meaningful:
         return False
     table_rows = [line for line in meaningful if line.startswith("|") and line.endswith("|")]
@@ -301,6 +376,45 @@ def section_has_substance(lines: list[str]) -> bool:
         if not re.fullmatch(r"\|(?:\s*:?-+:?\s*\|)+", line)
     ]
     return len(data_rows) >= 2
+
+
+def section_has_data_table(lines: list[str]) -> bool:
+    normalized = [
+        line.strip() if line is not None else None
+        for line in mask_nonrendered_lines(lines)
+    ]
+
+    def cells(line: str | None) -> list[str] | None:
+        if line is None or not (line.startswith("|") and line.endswith("|")):
+            return None
+        parsed: list[str] = []
+        current: list[str] = []
+        for character in line[1:-1]:
+            if character == "|":
+                trailing_backslashes = 0
+                for previous in reversed(current):
+                    if previous != "\\":
+                        break
+                    trailing_backslashes += 1
+                if trailing_backslashes % 2 == 0:
+                    parsed.append("".join(current).strip())
+                    current = []
+                    continue
+            current.append(character)
+        parsed.append("".join(current).strip())
+        return parsed if parsed and all(parsed) else None
+
+    for index in range(len(normalized) - 2):
+        header = cells(normalized[index])
+        separator = cells(normalized[index + 1])
+        data = cells(normalized[index + 2])
+        if header is None or separator is None or data is None:
+            continue
+        if len(header) != len(separator) or len(header) != len(data):
+            continue
+        if all(re.fullmatch(r":?-{3,}:?", cell) for cell in separator):
+            return True
+    return False
 
 
 def validate_effective_artifact_body(
@@ -355,6 +469,17 @@ def validate_effective_artifact_body(
                     str(document.relative_path),
                     section[0],
                     f"effective {artifact_type} has an empty '## {heading}' section",
+                )
+            )
+        elif (
+            heading in EFFECTIVE_ARTIFACT_REQUIRED_DATA_TABLES.get(artifact_type, ())
+            and not section_has_data_table(section[1])
+        ):
+            findings.append(
+                Finding(
+                    str(document.relative_path),
+                    section[0],
+                    f"effective {artifact_type} requires a populated data row in '## {heading}'",
                 )
             )
     for token in EFFECTIVE_ARTIFACT_REQUIRED_TOKENS.get(artifact_type, ()):
@@ -901,7 +1026,11 @@ def validate_text_hygiene(documents: list[Document]) -> list[Finding]:
             marker_length = len(marker)
             if open_fence is None:
                 open_fence = (marker_char, marker_length, line_number)
-            elif marker_char == open_fence[0] and marker_length >= open_fence[1]:
+            elif (
+                marker_char == open_fence[0]
+                and marker_length >= open_fence[1]
+                and not line[match.end() :].strip()
+            ):
                 open_fence = None
         if open_fence is not None:
             findings.append(

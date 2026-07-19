@@ -3,7 +3,7 @@ guide_id: SKEL-MATURITY
 title: Documentation Package Version and Maturity Policy
 status: experimental
 audience: human-and-ai
-package_version: 0.12.0
+package_version: 0.13.0
 control_catalog_version: 1.0.0
 artifact_schema_version: "1.0"
 read_when:
@@ -28,12 +28,12 @@ owns:
 
 | Field | Value |
 | --- | --- |
-| Package version | `0.12.0` |
+| Package version | `0.13.0` |
 | Package maturity | `experimental` |
 | Control catalog | `1.0.0` in guide `08` |
 | Artifact schema | `1.0` in [templates/README.md](templates/README.md) |
 | Required validators | Unit/fixtures: `PYTHONPATH=docs/blueprint python3 -m unittest discover -s docs/blueprint/scripts -p 'test_*.py'`; docs: `python3 docs/blueprint/scripts/validate_docs.py docs/blueprint --repo-root .`; presets: `python3 docs/blueprint/scripts/validate_presets.py docs/presets`; adopting app: `python3 docs/blueprint/scripts/validate_app_profile.py PATH --repo-root ROOT --expected-revision <current-source-revision> --expected-blueprint-revision <selected-blueprint-revision>` |
-| Declaration date | 2026-07-18 |
+| Declaration date | 2026-07-19 |
 
 `9.5/10` is the design coverage target. It is not the current package maturity label and is never inherited by a repository. An implementation earns a readiness claim only through guide `08` against current evidence.
 
@@ -44,9 +44,9 @@ owns:
 | Package owner | Unassigned; blocker | A human maintainer must accept ownership before candidate declaration |
 | Support/security/compatibility channel | None; blocker | Owner publishes a reachable channel and response policy |
 | Human dry run | Missing | Run from system profile through scorer without author guidance |
-| AI-assisted dry run | Bingo LMS supplies revision-bound repository-derived skill/guard friction and focused current checks; it is not a clean-room adoption of this package | Run an independent app-profile or preset adoption from unprimed context against the current package revision |
+| AI-assisted dry run | Bingo LMS supplies two revision-bound repository-derived observations with focused checks current only for each named source revision; neither is a clean-room adoption of this package | Run an independent app-profile or preset adoption from unprimed context against the current package revision |
 | Independent defect review | In-session editing/auditing is not a published independent acceptance | Named reviewer records scope, date, result, and evidence locator |
-| Pilot repositories | No qualifying package pilot; one same-stack repository-derived lesson source is recorded in `evidence/bingo-lms-repository-lessons.md` | Complete two materially different governed pilots; at least one must use another effective stack architecture |
+| Pilot repositories | No qualifying package pilot; two records from one same-stack repository are recorded in `evidence/bingo-lms-repository-lessons.md` and `evidence/bingo-lms-refactor-lessons-2026-07-19.md` | Complete two materially different governed pilots; at least one must use another effective stack architecture |
 | Reassessment trigger | Package/content change or continued evaluation by 2026-08-18 | Prospective owner; no automatic maturity promotion |
 
 These missing rows are intentionally explicit. Do not replace them with invented names, approvals, repositories, or command results. Structural CI and the fictional reference bundle demonstrate mechanics only.

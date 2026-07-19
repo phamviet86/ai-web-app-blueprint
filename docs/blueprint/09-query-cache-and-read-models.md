@@ -52,6 +52,8 @@ Reject invalid intent explicitly. Silently dropping a denied filter can broaden 
 
 Normalization preserves meaning rather than relying on truthiness: `false`, `0`, explicit `null`, an empty value allowed by the field contract, and an omitted key remain distinguishable through transport, application DTO, translator, persistence, and response mapping. Defaults apply only at the boundary that owns them and only to the states its public contract declares absent. Test with real identifier shapes plus locale/timezone-sensitive values where they affect ordering, ranges, or cache identity.
 
+A nontrivial flexible-read contract may implement logical pure stages for transport shape, typed values and predicate trees, field/operator/scope allowlisting, complexity/order/page enforcement, and adapter translation with minimal projection. A stack may combine these stages; no folder, class, or function count is required. The declared validation and error precedence is observable behavior: a later stage must not re-default an already normalized value, drop it by truthiness, broaden an earlier allowlist, or call an adapter after rejection. Verify both risky stages and the complete boundary, including aliases, coercion, group precedence, cumulative limits, deterministic tie-breakers, declared pagination absence/disable semantics, unknown keys, and absence of downstream I/O on invalid intent.
+
 ## Rule `QUERY-DSL-01`: controls, predicates, and groups are different concepts
 
 UI `input/type` describes interaction. Predicate `op` describes query semantics. Logical groups compose predicates.

@@ -79,6 +79,8 @@ Code that depends on time, randomness, identifiers, environment, files, network,
 
 Do not distort production design solely to satisfy a mocking framework. Testability should reinforce ownership and explicit dependencies.
 
+For a claimed import/build-isolation contract under [`RUNTIME-INITIALIZATION-01`](03-shared-kernel-and-platform.md#rule-runtime-initialization-01-importing-code-does-not-start-the-runtime), remove runtime-only secrets, make dependency endpoints unreachable, and prove that import, discovery, analysis, or artifact build neither attempts a connection nor starts external work. Exercise any declared build-time dependency through its separate isolated contract. This proof does not replace bounded startup/readiness evidence.
+
 ## Rule `PUBLIC-CONTRACT-PROOF-01`: prove callable and wire behavior, not names alone
 
 For a public API, module surface, event, job, or UI/server boundary, verify the callable signature and serialized request/result/error shape that consumers observe: required and optional fields, presence versus omission, `null`/`false`/`0` semantics, stable codes, versioning, and safe unknown/additive behavior where promised. Include at least one real consumer or boundary round trip when serialization, generated types, or framework wiring can drift.
@@ -122,7 +124,10 @@ Capture only behavior consumers can observe:
 - persisted state and transactional effects;
 - emitted event/job/vendor contract;
 - permission and ownership outcomes;
-- relevant ordering, rounding, time, or concurrency behavior.
+- meaningful presence/default cases including `false`, `null`, zero, empty and omitted;
+- validation, authorization, callback, error, reset/close, and effect ordering;
+- dependency-call cardinality, transaction span, idempotency, retry, fencing, and ambiguous outcomes when they define a safety/effect contract visible through committed results or external effects;
+- relevant rounding, time, import/startup, or concurrency behavior.
 
 Record known nondeterminism and normalize only irrelevant values. A characterization test may preserve an undesirable behavior temporarily, but the target decision must classify it as **preserve**, **fix deliberately**, or **retire**. Replace temporary characterizations with target contract tests after migration; do not fossilize accidental internals.
 
@@ -136,9 +141,11 @@ id | invariant | scope | automated check | threshold | owner | cadence | excepti
 
 Useful fitness functions include:
 
-- forbidden imports and dependency cycles;
+- forbidden imports plus direct/resolved import and re-export closure, self-cycles, and strongly connected components;
+- prohibited broad public-surface imports and transitive dependency expansion;
 - feature/public-surface leakage;
 - server-only code or secrets entering client artifacts;
+- import/discovery/build isolation from runtime-only services;
 - unguarded callable boundaries;
 - query complexity and page-size limits;
 - schema/API/event compatibility;
@@ -151,6 +158,8 @@ Automate mechanical invariants in lint, tests, build analysis, schema comparison
 ## Rule `FITNESS-CHECK-PROOF-01`: architecture checkers prove that they can fail
 
 Each high-value checker has a conforming fixture and focused negative fixtures for every materially different rule branch. The negatives intentionally introduce the forbidden dependency, public leak, runtime crossing, missing scope, stale artifact, or threshold breach and assert a nonzero/actionable result. Include fixtures for ignored paths, unsupported syntax, parser failure, and configuration/glob exclusions when those could produce a false green.
+
+Checker evidence declares analyzed roots, discovered-versus-analyzed files, resolver/alias behavior, supported import and re-export forms, treatment of dynamic/conditional/generated loading, exclusions, and skipped/unparsed counts. Import-graph negatives include a self-cycle, an indirect or re-export-mediated cycle, and a forbidden broad surface when those branches are claimed. An unsupported or omitted branch/scope is `NOT_EXECUTED`; the checker may still pass its explicitly declared covered scope, but cannot turn that result into a repository-wide claim.
 
 Run checker fixtures independently of the repository baseline. A green aggregate is not architecture evidence when relevant files were skipped, syntax was unparsed, a rule had no negative fixture, or the tool weakened itself to accept the fixture.
 

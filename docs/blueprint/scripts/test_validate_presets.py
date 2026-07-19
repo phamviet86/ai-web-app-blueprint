@@ -441,7 +441,7 @@ class PresetFixture:
                 "schema_version": "1.1.0",
                 "preset_id": self.preset_id,
                 "preset_version": "0.1.0",
-                "blueprint_version": "0.12.0",
+                "blueprint_version": "0.13.0",
                 "blueprint_revision": "c" * 40,
                 "status": "experimental",
                 "archetype": "full-stack-web",

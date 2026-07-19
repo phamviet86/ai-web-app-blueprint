@@ -3,7 +3,7 @@ document_id: SKEL-CHANGELOG
 title: Package Changelog
 status: experimental
 audience: human-and-ai
-package_version: 0.12.0
+package_version: 0.13.0
 ---
 
 # Changelog
@@ -13,6 +13,31 @@ All notable package-contract changes are recorded here. Versions follow [MATURIT
 ## Unreleased
 
 - None.
+
+## 0.13.0 - 2026-07-19
+
+### Added
+
+- Frozen structural-refactor baseline contract with immutable revision identity, declared artifact groups, authorized deltas, and fail-closed drift coverage.
+- Candidate-disposition contract distinguishing confirmed refactor action, intentional owner-local behavior, false positives, and unresolved record-only findings.
+- Runtime-initialization contract and negative build/import proof for checks that claim independence from runtime-only secrets and external services.
+- Revision-bound Bingo LMS repository-wide refactor evidence that separates current focused checks from broader historical source-reported closure.
+- Executable positive and adversarial regressions for effective refactor-plan sections, populated tables, and draft/effective status boundaries.
+
+### Changed
+
+- Module public contracts now support narrow consumer/capability/runtime sub-surfaces while treating broad facades as composition or bounded compatibility seams.
+- Shared promotion, query normalization, characterization, and architecture fitness now preserve lifecycle/effect ordering, declare checker coverage, and measure dependency/effect improvement instead of line reduction.
+- The refactor-slice template advances to `1.1.0` with frozen-boundary, candidate-disposition, behavior-equivalence, and checker-coverage sections.
+
+### Migration
+
+- Effective refactor-plan artifacts adopting this package line rebind `source_template` to template `1.1.0` (`SKEL-TPL-REFACTOR-SLICE@1.1.0`, or the current canonical path when path-qualified), increment `artifact_version`, update `updated_at`, refresh the artifact-registry digest, and add populated `Frozen boundary and authorized delta`, `Candidate disposition`, `Behavior-equivalence matrix`, and `Checker coverage` sections. Draft plans may remain incomplete until approval; a non-applicable checker still records rationale, owner, and manual evidence.
+- Existing/custom app profiles and future preset manifests adopt `blueprint_version` `0.13.0` only when intentionally upgrading and must refresh the selected blueprint revision, affected digests, and qualification evidence; no authority path or artifact-schema migration is introduced.
+
+### Maturity
+
+- Package remains `experimental`; control catalog remains `1.0.0` and artifact schema remains `1.0`. A second observation of the same application repository is not an independent pilot or cross-stack runtime proof.
 
 ## 0.12.0 - 2026-07-18
 

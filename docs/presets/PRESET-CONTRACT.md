@@ -27,7 +27,7 @@ Use JSON so a schema validator can reject incomplete or misspelled declarations 
   "schema_version": "1.1.0",
   "preset_id": "next-ts-example",
   "preset_version": "0.1.0",
-  "blueprint_version": "0.12.0",
+  "blueprint_version": "0.13.0",
   "blueprint_revision": "<immutable-revision>",
   "status": "experimental",
   "archetype": "full-stack-web",

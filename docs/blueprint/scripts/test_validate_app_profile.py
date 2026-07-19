@@ -11,6 +11,7 @@ from pathlib import Path
 
 from scripts.validate_app_profile import (
     BASELINE_COMMAND_LANES,
+    BLUEPRINT_VERSION,
     NEGATIVE_EVAL_KINDS,
     REQUIRED_SKILLS,
     AppProfileValidator,
@@ -585,7 +586,7 @@ class AppProfileFixture:
                 "$schema": "../../blueprint/schemas/app-profile.schema.json",
                 "schema_version": "1.0.0",
                 "profile_id": "example-app",
-                "blueprint_version": "0.12.0",
+                "blueprint_version": BLUEPRINT_VERSION,
                 "blueprint_revision": BLUEPRINT_REVISION,
                 "source_revision": REVISION,
                 "freshness_policy": {"stale_after_days": 30},
@@ -656,6 +657,14 @@ class AppProfileValidatorTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.fixture = AppProfileFixture(self.root)
         self.fixture.build()
+
+    def test_blueprint_version_matches_public_schema(self) -> None:
+        schema_path = Path(__file__).resolve().parent.parent / "schemas/app-profile.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            schema["properties"]["blueprint_version"]["const"],
+            BLUEPRINT_VERSION,
+        )
 
     def messages(
         self,
@@ -1715,7 +1724,7 @@ class AppProfileValidatorTests(unittest.TestCase):
             self.messages(expected_blueprint_revision="main"),
         )
         profile = self.fixture.read_profile()
-        profile["blueprint_revision"] = "release-0.12.0"
+        profile["blueprint_revision"] = f"release-{BLUEPRINT_VERSION}"
         self.fixture.update_profile(profile)
         self.assertIn(
             "blueprint_revision must be a full immutable content revision",

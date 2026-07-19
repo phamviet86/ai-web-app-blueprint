@@ -14,6 +14,7 @@ depends_on:
   - 15-delivery-observability-and-operations.md
 owns:
   - brownfield discovery and target-delta planning
+  - frozen structural baselines and candidate disposition
   - characterization, seams, strangler, branch-by-abstraction, and anti-corruption workflow
   - brownfield data cutover coordination and comparison policy
   - migration rollout gates, formal contract deprecation, transitional debt, and decommission proof
@@ -34,6 +35,14 @@ Classify each proposed behavior as:
 
 Do not hide a feature change inside a refactor. If structure and behavior must change together, document both contracts, independent evidence, rollout gates, and reversal limits.
 
+## Rule `REFACTOR-BASELINE-01`: bind structural claims to a frozen source
+
+A structural-only slice pins the exact source content revision and declares every applicable frozen boundary: callable/wire behavior, routes and entrypoints, authorization, persistence schema/history/data ownership, public facades, external effects, dependency manifests/locks, and runtime/build configuration. Each boundary is frozen or has a separately authorized delta; omission is not permission.
+
+Compare the pinned baseline with final target evidence through a reproducible manifest/digest or exact immutable diff/check over every declared artifact group. Unauthorized drift or evidence bound to a mismatched/stale declared revision is `FAIL`; a missing prerequisite or unavailable frozen source is `BLOCKED`; a skipped, unreadable, excluded, or unparsed check scope is `NOT_EXECUTED`. None is a passing structural claim. Separate pre-existing checkout differences from the selected refactor delta.
+
+Export lists, digests, and snapshots prove identity or topology only. They do not replace behavioral, wire-shape, authorization, data-effect, or interaction characterization.
+
 ## Rule `BROWNFIELD-INVENTORY-01`: map reality before choosing the seam
 
 Build a focused inventory for the migration scope:
@@ -49,6 +58,17 @@ Build a focused inventory for the migration scope:
 
 Use code/graph inspection, runtime evidence, schema/config/history, and responsible-owner interviews when available. A clean static import graph alone is not a behavior inventory.
 
+## Rule `REFACTOR-CANDIDATE-01`: metrics nominate candidates, not solutions
+
+Clone, line-count, complexity, dependency, and change-frequency tools produce investigation candidates, not an automatic extraction queue. Classify every in-scope finding with one disposition:
+
+- `REFACTOR_CONFIRMED`: semantic equivalence, mixed ownership, or another actionable architecture cause is proved; observable behavior is characterized, the target owner is clearer, and a measurable fitness delta is declared;
+- `INTENTIONAL_OWNER_LOCAL`: similar shape carries distinct policy, ownership, or change cadence and remains local;
+- `FALSE_POSITIVE`: the signal does not represent reusable production behavior;
+- `RECORD_ONLY`: evidence is insufficient or the slice is deferred with a reason and owner.
+
+No finding remains unclassified. `RECORD_ONLY` is unresolved inventory, not completed remediation. Similar syntax, a large file, multiple consumers, or a score alone is insufficient for extraction. Shared promotion additionally requires [`SHARED-PROMOTION-01`](03-shared-kernel-and-platform.md#rule-shared-promotion-01-promote-semantic-stability-not-repetition) and all affected consumers' behavior evidence.
+
 ## Rule `REFACTOR-CHARACTERIZE-01`: freeze observable contracts first
 
 Apply `TEST-CHARACTERIZATION-01` from the testing guide at the narrowest stable boundary. Cover positive, negative, permission, data-effect, and failure behavior that migration could change.
@@ -57,12 +77,15 @@ Record:
 
 - normalized input/output/error examples;
 - persisted and emitted side effects;
-- invariants, ordering, timing, and tolerated nondeterminism;
+- meaningful `false`, `null`, zero, empty and omitted values, defaults, real identifiers, and relevant timezone behavior;
+- validation, authorization, callback, reset/close, error and effect ordering;
+- dependency-call cardinality, transaction span, idempotency, retry, fencing, and ambiguous-result behavior when they protect a safety/effect contract;
+- invariants, timing, import/startup behavior, and tolerated nondeterminism;
 - representative cardinality and performance baseline;
 - known bugs classified as preserve/fix/retire;
 - missing evidence and risk owner.
 
-Characterization is a temporary safety net, not proof that the legacy design is correct.
+Capture a behavior/effect-equivalence matrix for the material observable and safety/effect axes above. A stable public facade may protect consumers while internals split, but unchanged export names do not prove callable, wire, authorization, lifecycle, or effect equivalence; apply `PUBLIC-CONTRACT-PROOF-01`. Private implementation order belongs in architecture fitness unless it protects the declared effect contract. Every omitted material axis names a risk owner. Measure success at the seam—dependency direction, cycle/import closure, effect isolation, complexity, testability, or operational risk—not by total line reduction. Characterization is a temporary safety net, not proof that the legacy design is correct.
 
 ## Rule `TARGET-DELTA-01`: define the destination independently
 
@@ -228,7 +251,10 @@ INVENTORY
 
 ```text
 Inventory scope and consumers:
+Frozen baseline revision, artifact groups, digests/checks, and authorized delta:
+Candidate disposition closure and unresolved owners:
 Characterization contracts/results:
+Behavior/effect-equivalence matrix and negative evidence:
 Target delta and selected seam:
 Transition adapters/exceptions with expiry:
 Deprecation phase, consumer/notification/usage evidence, and dates:
@@ -244,6 +270,8 @@ Residual risk and owner:
 
 Stop and re-scope when:
 
+- a frozen group drifts outside the authorized delta or its baseline/check coverage is incomplete;
+- an in-scope candidate is unclassified or `RECORD_ONLY` is counted as completed;
 - current observable behavior is unknown and no safe characterization exists;
 - the change mixes unclassified product behavior with structural migration;
 - no seam can isolate a releasable slice;
